@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- link js file -->
+        <script src="script.js" ></script>
+        <!-- some quick css -->
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <!-- on loading the site, load the xml file -->
+    <body onload="loadXML();">
+
+        <!-- search bar -->
+        <input type="text" id="searchBar" onkeyup="search()" placeholder="Search" title="Type to search">
+
+        <!-- empty table to plug the xml data into -->
+        <div class="tableHolder">
+            <table id="demo"></table>
+        </div>
+        
+
+        <!-- buttons for sorting -->
+        <button onclick="sortTable('title')">Sort by Name</button>
+        <button onclick="sortTable('category')">Sort by Category</button>
+    </body>
+</html>
