@@ -4,6 +4,7 @@
         <description>Website with lots of coding and web development tutorials</description>
         <category>Coding</category>
         <id>1</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Repl.it</title>
@@ -148,5 +149,17 @@
         <description>Minecraft game modification files.</description>
         <category>Games</category>
         <id>25</id>
+    </resource>
+    <resource>
+        <title>TinkerCAD</title>
+        <description>Great place to learn CAD and to do simple tasks.</description>
+        <category>CAD</category>
+        <id>26</id>
+    </resource>
+    <resource>
+        <title>Scratch</title>
+        <description>Block coding created by MIT. Great place to start.</description>
+        <category>Coding</category>
+        <id>27</id>
     </resource>
 </entries>
