@@ -1,4 +1,4 @@
-# the-compiler
+# The Compiler
 Place for useful files and links to resources.
 
 MASSIVE thanks to janik. He inspired this, and I also used some of his code. He is the man:
