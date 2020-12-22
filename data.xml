@@ -11,155 +11,179 @@
         <description>Great online compiler and IDE for almost any language. Compatible with Github</description>
         <category>Coding</category>
         <id>2</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>Janik</title>
         <description>This guy is great at coding and will always help you out.</description>
         <category>Person</category>
         <id>3</id>
-    </resource>
-    <resource>
+    </resource> -->
+    <!-- <resource>
         <title>Github</title>
         <description>Repository</description>
         <category>Coding</category>
         <id>4</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>Thingiverse</title>
         <description>Place to find CAD files and things to 3D print.</description>
         <category>CAD</category>
         <id>5</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>Minecraft Gamepedia</title>
         <description>Good for finding technical values when making resource/data packs.</description>
         <category>Games</category>
         <id>6</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>VS Code</title>
         <description>Code IDE for all kinds of languages.</description>
         <category>Coding</category>
         <id>7</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>Music</title>
         <description>Some of my favorite music.</description>
         <category>Entertainment</category>
         <id>8</id>
-    </resource>
-    <resource>
+    </resource> -->
+    <!-- <resource>
         <title>Spotify</title>
         <description>Podcasts and personalized music</description>
         <category>Entertainment</category>
         <id>9</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>Website</title>
         <description>About Me</description>
         <category>Web Development</category>
         <id>10</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Slides Template</title>
         <description>Templates for slideshows.</description>
         <category>School</category>
         <id>11</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>Bitly</title>
         <description>Shortens Links</description>
         <category>School</category>
         <id>12</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>Citation Machine</title>
         <description>Creates APA and MLA citations.</description>
         <category>School</category>
         <id>13</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>SpaceXTM</title>
         <description>Tracks upcoming launches, and past stats.</description>
         <category>Other</category>
         <id>14</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>Awardspace</title>
         <description>Web hosting service.</description>
         <category>Web Development</category>
         <id>15</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Name.com</title>
         <description>Web hosting service.</description>
         <category>Web Development</category>
         <id>16</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Stack Overflow</title>
         <description>Forum for coding and web development</description>
         <category>Coding</category>
         <id>17</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>SolidWorks</title>
-        <description>The best CAD software.</description>
+        <description>The best CAD software. Period.</description>
         <category>CAD</category>
         <id>18</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Inkscape</title>
         <description>Free graphic design tool.</description>
         <category>Graphic Design</category>
         <id>19</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>HEX from image</title>
         <description>Takes pixels in an image and returns HEX codes.</description>
         <category>Graphic Design</category>
         <id>20</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>HEX to RGB</title>
         <description>Converts between values.</description>
         <category>Graphic Design</category>
         <id>21</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Alena Aenami</title>
         <description>Amazing artist. Great desktop/phone background and for PFP's.</description>
         <category>Other</category>
         <id>22</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Icons</title>
         <description>Offers tons of icons for desktop and phone.</description>
         <category>Other</category>
         <id>23</id>
+        <link>https://firstinspires.org</link>
     </resource>
-    <resource>
+    <!-- <resource>
         <title>Typing Practice</title>
         <description>Great to practice typing to improve coding speed.</description>
         <category>Other</category>
         <id>24</id>
-    </resource>
-    <resource>
+    </resource> -->
+    <!-- <resource>
         <title>Vanilla Tweaks</title>
         <description>Minecraft game modification files.</description>
         <category>Games</category>
         <id>25</id>
-    </resource>
+    </resource> -->
     <resource>
         <title>TinkerCAD</title>
         <description>Great place to learn CAD and to do simple tasks.</description>
         <category>CAD</category>
         <id>26</id>
+        <link>https://firstinspires.org</link>
     </resource>
     <resource>
         <title>Scratch</title>
         <description>Block coding created by MIT. Great place to start.</description>
         <category>Coding</category>
         <id>27</id>
+        <link>https://firstinspires.org</link>
+    </resource>
+    <resource>
+        <title>Blender</title>
+        <description>Awesome graphic design tool</description>
+        <category>Graphic Design</category>
+        <id>28</id>
+        <link>https://firstinspires.org</link>
     </resource>
 </entries>

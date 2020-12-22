@@ -36,9 +36,11 @@ function loadTable(xml) {
         // addes the table row html tag, and table cell tag
         // the getElements then addes the each info bit to a coloum so to put it
         // lastly, there are a ending tags added
-        table += "<tr><td>" +
+        table += "<tr><td><a href='"+
+        x[i].getElementsByTagName("link")[0].childNodes[0].nodeValue+
+        "' target = '_blank'>" +
         x[i].getElementsByTagName("title")[0].childNodes[0].nodeValue +
-        "</td><td>" +
+        "</a></td><td>" +
         x[i].getElementsByTagName("description")[0].childNodes[0].nodeValue +
         "</td><td>" +
         x[i].getElementsByTagName("category")[0].childNodes[0].nodeValue +
