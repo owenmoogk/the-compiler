@@ -4,14 +4,14 @@
         <description>Website with lots of coding and web development tutorials</description>
         <category>Coding</category>
         <id>1</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.w3schools.com/</link>
     </resource>
     <resource>
         <title>Repl.it</title>
         <description>Great online compiler and IDE for almost any language. Compatible with Github</description>
         <category>Coding</category>
         <id>2</id>
-        <link>https://firstinspires.org</link>
+        <link>https://repl.it/</link>
     </resource>
     <!-- <resource>
         <title>Janik</title>
@@ -30,7 +30,7 @@
         <description>Place to find CAD files and things to 3D print.</description>
         <category>CAD</category>
         <id>5</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.thingiverse.com/</link>
     </resource>
     <!-- <resource>
         <title>Minecraft Gamepedia</title>
@@ -43,7 +43,7 @@
         <description>Code IDE for all kinds of languages.</description>
         <category>Coding</category>
         <id>7</id>
-        <link>https://firstinspires.org</link>
+        <link>https://code.visualstudio.com/</link>
     </resource>
     <!-- <resource>
         <title>Music</title>
@@ -62,14 +62,14 @@
         <description>About Me</description>
         <category>Web Development</category>
         <id>10</id>
-        <link>https://firstinspires.org</link>
+        <link>https://owenmoogk.codes/</link>
     </resource>
     <resource>
         <title>Slides Template</title>
         <description>Templates for slideshows.</description>
         <category>School</category>
         <id>11</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.slidescarnival.com/</link>
     </resource>
     <!-- <resource>
         <title>Bitly</title>
@@ -82,7 +82,7 @@
         <description>Creates APA and MLA citations.</description>
         <category>School</category>
         <id>13</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.citationmachine.net/apa/cite-a-website</link>
     </resource>
     <!-- <resource>
         <title>SpaceXTM</title>
@@ -95,63 +95,63 @@
         <description>Web hosting service.</description>
         <category>Web Development</category>
         <id>15</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.awardspace.com/</link>
     </resource>
     <resource>
         <title>Name.com</title>
         <description>Web hosting service.</description>
         <category>Web Development</category>
         <id>16</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.name.com/</link>
     </resource>
     <resource>
         <title>Stack Overflow</title>
         <description>Forum for coding and web development</description>
         <category>Coding</category>
         <id>17</id>
-        <link>https://firstinspires.org</link>
+        <link>https://stackoverflow.com/</link>
     </resource>
     <resource>
         <title>SolidWorks</title>
         <description>The best CAD software. Period.</description>
         <category>CAD</category>
         <id>18</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.solidworks.com/</link>
     </resource>
     <resource>
         <title>Inkscape</title>
         <description>Free graphic design tool.</description>
         <category>Graphic Design</category>
         <id>19</id>
-        <link>https://firstinspires.org</link>
+        <link>https://inkscape.org/</link>
     </resource>
     <resource>
         <title>HEX from image</title>
         <description>Takes pixels in an image and returns HEX codes.</description>
         <category>Graphic Design</category>
         <id>20</id>
-        <link>https://firstinspires.org</link>
+        <link>https://html-color-codes.info/colors-from-image/</link>
     </resource>
     <resource>
         <title>HEX to RGB</title>
         <description>Converts between values.</description>
         <category>Graphic Design</category>
         <id>21</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.rgbtohex.net/hextorgb/</link>
     </resource>
     <resource>
         <title>Alena Aenami</title>
         <description>Amazing artist. Great desktop/phone background and for PFP's.</description>
         <category>Other</category>
         <id>22</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.artstation.com/aenamiart</link>
     </resource>
     <resource>
         <title>Icons</title>
         <description>Offers tons of icons for desktop and phone.</description>
         <category>Other</category>
         <id>23</id>
-        <link>https://firstinspires.org</link>
+        <link>https://icons8.com/</link>
     </resource>
     <!-- <resource>
         <title>Typing Practice</title>
@@ -170,20 +170,20 @@
         <description>Great place to learn CAD and to do simple tasks.</description>
         <category>CAD</category>
         <id>26</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.tinkercad.com/</link>
     </resource>
     <resource>
         <title>Scratch</title>
         <description>Block coding created by MIT. Great place to start.</description>
         <category>Coding</category>
         <id>27</id>
-        <link>https://firstinspires.org</link>
+        <link>https://scratch.mit.edu/</link>
     </resource>
     <resource>
         <title>Blender</title>
         <description>Awesome graphic design tool</description>
         <category>Graphic Design</category>
         <id>28</id>
-        <link>https://firstinspires.org</link>
+        <link>https://www.blender.org/</link>
     </resource>
 </entries>
