@@ -8,10 +8,11 @@
 
     <!-- on loading the site, load the xml file -->
     <body onload="loadXML();">
-
-        <input type="text" id="searchBar" onkeyup="search()" placeholder="Search" title="Type to search">
-        <button onclick="sortTable('title')">Sort by Name</button>
-        <button onclick="sortTable('category')">Sort by Category</button>
+        <div class="head">
+            <input type="text" id="searchBar" onkeyup="search()" placeholder="Search" title="Type to search">
+            <button onclick="sortTable('title')">Sort by Name</button>
+            <button onclick="sortTable('category')">Sort by Category</button>
+        </div>
 
         <div class="tableHolder">
             <table id="demo"></table>

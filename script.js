@@ -42,7 +42,7 @@ function loadTable(xml) {
         x[i].getElementsByTagName("title")[0].childNodes[0].nodeValue +
         "</a></td><td>" +
         x[i].getElementsByTagName("description")[0].childNodes[0].nodeValue +
-        "</td><td>" +
+        "</td><td style='font-style:italic;'>" +
         x[i].getElementsByTagName("category")[0].childNodes[0].nodeValue +
         "</td></tr>";
     }

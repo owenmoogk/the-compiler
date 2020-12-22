@@ -18,6 +18,7 @@
         <description>This guy is great at coding and will always help you out.</description>
         <category>Person</category>
         <id>3</id>
+        <link>https://janik.codes</link>
     </resource> -->
     <!-- <resource>
         <title>Github</title>
@@ -40,7 +41,7 @@
         <link>https://coolors.co/f433ab-cb04a5-f4d58d-bf0603-2d1115</link>
     </resource>
     <resource>
-        <title>VS Code</title>
+        <title>VSCode</title>
         <description>Code IDE for all kinds of languages.</description>
         <category>Coding</category>
         <id>7</id>
@@ -127,7 +128,7 @@
         <link>https://inkscape.org/</link>
     </resource>
     <resource>
-        <title>HEX from image</title>
+        <title>HEX from Image</title>
         <description>Takes pixels in an image and returns HEX codes.</description>
         <category>Graphic Design</category>
         <id>20</id>
