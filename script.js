@@ -105,6 +105,7 @@ function sortTable(sortBy){
             let category = x[w].getElementsByTagName("category")[0].childNodes[0].nodeValue
             let description = x[w].getElementsByTagName("description")[0].childNodes[0].nodeValue
             let id = x[w].getElementsByTagName("id")[0].childNodes[0].nodeValue
+            let link = x[w].getElementsByTagName("link")[0].childNodes[0].nodeValue
 
             for (idCycler = 0; idCycler < idsPassed.length; idCycler++){
                 if (idsPassed[idCycler] == id){
@@ -117,14 +118,14 @@ function sortTable(sortBy){
 
             if (sortBy == 'title'){
                 if (title == sortedList[p]){
-                    table += "<tr><td>" + title + "</td><td>" + description + "</td><td>" + category + "</td></tr>";
+                    table += "<tr><td><a href='"+link+"' target = '_blank'>" + title + "</td><td>" + description + "</td><td>" + category + "</td></tr>";
                     idsPassed.push(id);
                     break;
                 }
             }
             if (sortBy == 'category'){
                 if (category == sortedList[p]){
-                    table += "<tr><td>" + title + "</td><td>" + description + "</td><td>" + category + "</td></tr>";
+                    table += "<tr><td><a href='"+link+"' target = '_blank'>" + title + "</td><td>" + description + "</td><td>" + category + "</td></tr>";
                     idsPassed.push(id);
                     break;
                 }
@@ -133,8 +134,6 @@ function sortTable(sortBy){
     }
     // sets the html inside the empty table we made to be the great table varible we just made
     document.getElementById("demo").innerHTML = table;
-
-
 
     // lastly call search function to show and hide proper ones
     search();

@@ -32,12 +32,13 @@
         <id>5</id>
         <link>https://www.thingiverse.com/</link>
     </resource>
-    <!-- <resource>
-        <title>Minecraft Gamepedia</title>
-        <description>Good for finding technical values when making resource/data packs.</description>
-        <category>Games</category>
+    <resource>
+        <title>Color Palette Generator</title>
+        <description>Color palette generator for graphic design and website.</description>
+        <category>Graphic Design</category>
         <id>6</id>
-    </resource> -->
+        <link>https://coolors.co/f433ab-cb04a5-f4d58d-bf0603-2d1115</link>
+    </resource>
     <resource>
         <title>VS Code</title>
         <description>Code IDE for all kinds of languages.</description>
