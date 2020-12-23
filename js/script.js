@@ -49,6 +49,7 @@ function loadTable(xml) {
     // sets the html inside the empty table we made to be the great table varible we just made
     document.getElementById("demo").innerHTML = table;
     // by default sort the table by name
+    sortTable('title')
 }
 
 // search function. the search bar searches through name and description
@@ -80,7 +81,7 @@ function search() {
 
 // sorting function. will sort either by the name or the category. there will be both ascending and descending sorting
 // the fuction takes in a value (sortBy). this value index of the thing being sorted in a tablerow, so 0 is name, and 2 is category
-function sortTable(sortBy){
+function sortTable(){
     // variables UwU
     var file = xmlhttp.responseXML;
     var x = file.getElementsByTagName("resource"); // picks out just the resources aka "<resource>"
@@ -92,7 +93,6 @@ function sortTable(sortBy){
         sortedList.push(value); // pushed value to list
     }
     sortedList.sort(); // sorts list
-    console.log(sortedList); // just for checking :)
 
     let table = [];
     let idsPassed = [];
@@ -137,4 +137,19 @@ function sortTable(sortBy){
 
     // lastly call search function to show and hide proper ones
     search();
+
+    // change button to say sort by other thing
+    var button = document.getElementById('sort-button')
+    
+    if (sortBy == 'title'){
+        button.innerText = 'Sort by Category'
+        sortBy = 'category'
+    }
+    else{
+        button.innerText = 'Sort by Name'
+        sortBy = 'title'
+    }
 }
+
+// sort by title at first
+var sortBy = 'title'

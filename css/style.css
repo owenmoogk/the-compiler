@@ -24,7 +24,7 @@ body{
     width: 70%;
     margin: auto;
 }
-.sort-button{
+#sort-button{
     border: 3px solid #F433AB;
     background-color: #F433AB;
     border-radius: 5px;
