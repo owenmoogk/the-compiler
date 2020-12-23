@@ -4,10 +4,15 @@
 }
 
 /* dark mode */
-.darkmode{
-    color: white;
-    background-color: #363942;
+.lightmode{
+    color: black;
+    background-color: white;
     transition: 0.3s;
+}
+
+body{
+    background-color: #363942;
+    color: white;
 }
 
 /* top stuff */
@@ -69,7 +74,7 @@ td{
 table a{
     text-decoration: none;
     font-weight: bold;
-    color: black;
+    color: white;
     transition: 0.3s;
 }
 a:hover{

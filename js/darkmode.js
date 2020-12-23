@@ -2,9 +2,9 @@ function toggleDarkMode(){
     var body = document.body
     var links = document.getElementsByTagName('a')
 
-    body.classList.toggle('darkmode')
+    body.classList.toggle('lightmode')
 
     for (i in links){
-        links[i].classList.toggle('darkmode')
+        links[i].classList.toggle('lightmode')
     }
 }
