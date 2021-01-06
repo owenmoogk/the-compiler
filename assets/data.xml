@@ -188,4 +188,11 @@
         <id>28</id>
         <link>https://www.blender.org/</link>
     </resource>
+    <resource>
+        <title>YTMP3</title>
+        <description>Converting youtube videos into mp3 files. Very useful.</description>
+        <category>Other</category>
+        <id>29</id>
+        <link>https://www.ytmp3.cc/</link>
+    </resource>
 </entries>
