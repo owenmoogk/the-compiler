@@ -195,4 +195,11 @@
         <id>29</id>
         <link>https://www.ytmp3.cc/</link>
     </resource>
+    <resource>
+        <title>Gear Calculator</title>
+        <description>Input gear options, get svg and cad files.</description>
+        <category>CAD</category>
+        <id>30</id>
+        <link>http://hessmer.org/gears/InvoluteSpurGearBuilder.html</link>
+    </resource>
 </entries>
