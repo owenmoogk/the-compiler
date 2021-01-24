@@ -92,7 +92,7 @@
         <category>Other</category>
         <id>14</id>
     </resource> -->
-    <resource>
+    <!-- <resource>
         <title>Awardspace</title>
         <description>Web hosting service.</description>
         <category>Web Development</category>
@@ -105,7 +105,7 @@
         <category>Web Development</category>
         <id>16</id>
         <link>https://www.name.com/</link>
-    </resource>
+    </resource> -->
     <resource>
         <title>Stack Overflow</title>
         <description>Forum for coding and web development</description>
@@ -201,5 +201,12 @@
         <category>CAD</category>
         <id>30</id>
         <link>http://hessmer.org/gears/InvoluteSpurGearBuilder.html</link>
+    </resource>
+    <resource>
+        <title>Freenom</title>
+        <description>Web hosting service.</description>
+        <category>Web Development</category>
+        <id>31</id>
+        <link>https://my.freenom.com/</link>
     </resource>
 </entries>
