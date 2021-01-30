@@ -8,10 +8,10 @@
     </head>
 
     <!-- on loading the site, load the xml file -->
-    <body onload="loadXML();">
+    <body>
         <div class="head">
             <input type="text" id="searchBar" onkeyup="search()" placeholder="Search" title="Type to search">
-            <button onclick="toggleDarkMode()" class="dark-button"><img src="/assets/contrast-circle-512.png"></button>
+            <button onclick="toggleDarkMode(false)" class="dark-button"><img src="/assets/contrast-circle-512.png"></button>
             <a href='https://github.com/owenmoogk/the-compiler' target="_blinks"><button class="dark-button"><img src="/assets/github.png"></button></a>
             <button onclick="sortTable()" id="sort-button">Sort by Category</button>
         </div>
@@ -20,4 +20,6 @@
             <table id="demo"></table>
         </div>
     </body>
+    <script>loadXML()</script>
+    <script>setTimeout(function () {darkModeStorageCheck()}, 30);</script>
 </html>

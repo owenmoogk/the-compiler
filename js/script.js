@@ -24,7 +24,6 @@ function loadXML() {
     }
 }
 
-// function that loops through the data and spins it into the html. required the "this" from the request made above
 function loadTable(xml) {
     var i; // current row
     var file = xml.responseXML; // js thingy, its todo with the request
