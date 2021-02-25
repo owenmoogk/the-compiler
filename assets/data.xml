@@ -155,18 +155,19 @@
         <id>23</id>
         <link>https://icons8.com/</link>
     </resource>
-    <!-- <resource>
+    <resource>
         <title>Typing Practice</title>
         <description>Great to practice typing to improve coding speed.</description>
         <category>Other</category>
         <id>24</id>
-    </resource> -->
-    <!-- <resource>
-        <title>Vanilla Tweaks</title>
-        <description>Minecraft game modification files.</description>
-        <category>Games</category>
+    </resource>
+    <resource>
+        <title>HTML 5 Up</title>
+        <description>HTML web templates.</description>
+        <category>Web Development</category>
         <id>25</id>
-    </resource> -->
+        <link>https://html5up.net/</link>
+    </resource>
     <resource>
         <title>TinkerCAD</title>
         <description>Great place to learn CAD and to do simple tasks.</description>
