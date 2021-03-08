@@ -21,6 +21,5 @@ function toggleDarkMode(firstTime){
 function darkModeStorageCheck(){
     if (localStorage.lightMode == "true"){
         toggleDarkMode(true)
-        console.log("OIiii")
     }
 }
