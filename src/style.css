@@ -3,19 +3,22 @@
     font-family: 'IBM Plex Sans', serif;
 }
 
-/* dark mode */
-.lightmode{
-    color: black;
-    background-color: white;
+body{
+    background-color: var(--backgroundColor);
+    color: var(--textColor);
     transition: 0.3s;
 }
 
-body{
-    background-color: #1E1E1E;
-    color: white;
-}
-
 /* top stuff */
+h1{
+    padding-top: 30px;
+    margin: auto;
+    font-style: italic;
+    width: fit-content;
+    font-size: 40px;
+    line-height: 10px;
+    border-bottom: 20px solid var(--themeColor);
+}
 .title{
     float: right;
 }
@@ -24,9 +27,13 @@ body{
     width: 70%;
     margin: auto;
 }
+button{
+    outline: none;
+    border: none;
+    color: var(--textColor);
+}
 #sort-button{
-    border: 3px solid #F433AB;
-    background-color: #F433AB;
+    background-color: var(--themeColor);
     border-radius: 5px;
     float: right;
     height: 40px;
@@ -35,14 +42,14 @@ body{
     margin: 0px 10px;
 }
 .dark-button{
-    border: 3px solid #F433AB;
-    background-color: #F433AB;
+    background-color: var(--themeColor);
     border-radius: 5px;
     float: right;
     height: 40px;
     width: 40px;
     padding: 0;
     margin: 0px 10px;
+    padding: 5px;
 }
 input{
     width: 400px;
@@ -74,11 +81,8 @@ td{
 table a{
     text-decoration: none;
     font-weight: bold;
-    color: white;
+    color: var(--textColor);
     transition: 0.3s;
-}
-table a.lightmode{
-    color: black;
 }
 a:hover{
     border-bottom: 2px solid #F433AB;
