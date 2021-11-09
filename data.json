@@ -1,0 +1,110 @@
+[
+    {
+        "title": "W3Schools",
+        "description": "Website with lots of coding and web development tutorials",
+        "category": "Coding",
+        "link": "https://www.w3schools.com/"
+    },
+    {
+        "title": "Repl.it",
+        "description": "Great online compiler and IDE for almost any language. Compatible with Github",
+        "category": "Coding",
+        "link": "https://repl.it/"
+    },
+    {
+        "title": "Color Palette Generator",
+        "description": "Color palette generator for graphic design and website.",
+        "category": "Graphic Design",
+        "link": "https://coolors.co/f433ab-cb04a5-f4d58d-bf0603-2d1115"
+    },
+    {
+        "title": "Website",
+        "description": "About Me",
+        "category": "Web Development",
+        "link": "https://owenmoogk.codes/"
+    },
+    {
+        "title": "Slides Template",
+        "description": "Templates for slideshows.",
+        "category": "School",
+        "link": "https://www.slidescarnival.com/"
+    },
+    {
+        "title": "Citation Machine",
+        "description": "Creates APA and MLA citations.",
+        "category": "School",
+        "link": "https://www.citationmachine.net/apa/cite-a-website"
+    },
+    {
+        "title": "Inkscape",
+        "description": "Free graphic design tool.",
+        "category": "Graphic Design",
+        "link": "https://inkscape.org/"
+    },
+    {
+        "title": "HEX from Image",
+        "description": "Takes pixels in an image and returns HEX codes.",
+        "category": "Graphic Design",
+        "link": "https://html-color-codes.info/colors-from-image/"
+    },
+    {
+        "title": "HEX to RGB",
+        "description": "Converts between values.",
+        "category": "Graphic Design",
+        "link": "https://www.rgbtohex.net/hextorgb/"
+    },
+    {
+        "title": "Alena Aenami",
+        "description": "Amazing artist. Great desktop/phone background and for PFP's.",
+        "category": "Other",
+        "link": "https://www.artstation.com/aenamiart"
+    },
+    {
+        "title": "Icons",
+        "description": "Offers tons of icons for desktop and phone.",
+        "category": "Other",
+        "link": "https://icons8.com/"
+    },
+    {
+        "title": "Typing Practice",
+        "description": "Great to practice typing to improve coding speed.",
+        "category": "Other",
+        "link": "https://www.keybr.com/"
+    },
+    {
+        "title": "HTML 5 Up",
+        "description": "HTML web templates.",
+        "category": "Web Development",
+        "link": "https://html5up.net/"
+    },
+    {
+        "title": "TinkerCAD",
+        "description": "Great place to learn CAD and to do simple tasks.",
+        "category": "CAD",
+        "link": "https://www.tinkercad.com/"
+    },
+    {
+        "title": "Scratch",
+        "description": "Block coding created by MIT. Great place to start.",
+        "category": "Coding",
+        "link": "https://scratch.mit.edu/"
+    },
+    {
+        "title": "YTMP3",
+        "description": "Converting youtube videos into mp3 files. Very useful.",
+        "category": "Other",
+        "link": "https://www.ytmp3.cc/"
+    },
+    {
+        "title": "Gear Calculator",
+        "description": "Input gear options, get svg and cad files.",
+        "category": "CAD",
+        "link": "http://hessmer.org/gears/InvoluteSpurGearBuilder.html"
+    },
+    {
+        "title": "Freenom",
+        "description": "Web hosting service.",
+        "category": "Web Development",
+        "link": "https://my.freenom.com/"
+    }
+]
