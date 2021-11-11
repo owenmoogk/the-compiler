@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/the-compiler/static/css/main.0f7e43b8.chunk.css",
-    "main.js": "/the-compiler/static/js/main.21874861.chunk.js",
-    "main.js.map": "/the-compiler/static/js/main.21874861.chunk.js.map",
+    "main.css": "/the-compiler/static/css/main.2b352f2f.chunk.css",
+    "main.js": "/the-compiler/static/js/main.3ddb101f.chunk.js",
+    "main.js.map": "/the-compiler/static/js/main.3ddb101f.chunk.js.map",
     "runtime-main.js": "/the-compiler/static/js/runtime-main.5a545c38.js",
     "runtime-main.js.map": "/the-compiler/static/js/runtime-main.5a545c38.js.map",
     "static/js/2.2af24f94.chunk.js": "/the-compiler/static/js/2.2af24f94.chunk.js",
     "static/js/2.2af24f94.chunk.js.map": "/the-compiler/static/js/2.2af24f94.chunk.js.map",
     "index.html": "/the-compiler/index.html",
-    "static/css/main.0f7e43b8.chunk.css.map": "/the-compiler/static/css/main.0f7e43b8.chunk.css.map",
+    "static/css/main.2b352f2f.chunk.css.map": "/the-compiler/static/css/main.2b352f2f.chunk.css.map",
     "static/js/2.2af24f94.chunk.js.LICENSE.txt": "/the-compiler/static/js/2.2af24f94.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.5a545c38.js",
     "static/js/2.2af24f94.chunk.js",
-    "static/css/main.0f7e43b8.chunk.css",
-    "static/js/main.21874861.chunk.js"
+    "static/css/main.2b352f2f.chunk.css",
+    "static/js/main.3ddb101f.chunk.js"
   ]
 }
