@@ -9,7 +9,7 @@ export default function App() {
   const [sortedBy, setSortedBy] = useState('alpha')
 
   useEffect(() => {
-    fetch('data.json')
+    fetch(process.env.PUBLIC_URL+'/data.json')
       .then(response => response.json())
       .then(json => setData(json))
   }, [])
@@ -87,7 +87,7 @@ export default function App() {
 
         <input type="text" id="searchBar" onKeyUp={(e) => search(e.target.value)} placeholder="Search" title="Type to search" />
         <button onClick={() => setDarkMode(!darkMode)} className="dark-button">
-          <img src="darkmode.png" />
+          <img src={process.env.PUBLIC_URL+"/darkmode.png"} />
         </button>
         {sortedBy == 'alpha'
           ? <button onClick={() => sortTable('category')} id="sort-button">Sort by Category</button>

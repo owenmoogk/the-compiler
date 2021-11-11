@@ -85,7 +85,7 @@ table a{
     transition: 0.3s;
 }
 a:hover{
-    border-bottom: 2px solid #F433AB;
-    color: #F433AB;
+    border-bottom: 2px solid var(--themeColor);
+    color: var(--themeColor);
     transition: 0.3s;
 }
