@@ -100,5 +100,11 @@
         "description": "Web hosting service.",
         "category": "Web Development",
         "link": "https://my.freenom.com/"
+    },
+    {
+        "title": "ImprovMX",
+        "description": "Email forwarding service for custom domains",
+        "category": "Web Development",
+        "link": "https://app.improvmx.com/"
     }
 ]
