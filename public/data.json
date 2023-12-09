@@ -12,7 +12,7 @@
         "link": "https://repl.it/"
     },
     {
-        "title": "Color Palette Generator",
+        "title": "Coolors",
         "description": "Color palette generator for graphic design and website.",
         "category": "Graphic Design",
         "link": "https://coolors.co/f433ab-cb04a5-f4d58d-bf0603-2d1115"
@@ -50,13 +50,13 @@
     {
         "title": "Alena Aenami",
         "description": "Amazing artist. Great desktop/phone background and for PFP's.",
-        "category": "Other",
+        "category": "Art",
         "link": "https://www.artstation.com/aenamiart"
     },
     {
-        "title": "Icons",
+        "title": "Icons8",
         "description": "Offers tons of icons for desktop and phone.",
-        "category": "Other",
+        "category": "Web Development",
         "link": "https://icons8.com/"
     },
     {
@@ -106,5 +106,59 @@
         "description": "Email forwarding service for custom domains",
         "category": "Web Development",
         "link": "https://app.improvmx.com/"
+    },
+    {
+        "title": "time2reach",
+        "description": "Public transit heatmap, for planning trips",
+        "category": "Other",
+        "link": "https://map.henryn.ca/Toronto"
+    },
+    {
+        "title": "World Vector Logo",
+        "description": "Logos for companies and technologies",
+        "category": "Web Development",
+        "link": "https://worldvectorlogo.com/"
+    },
+    {
+        "title": "Gydw1n",
+        "description": "Amazing artist, for background pictures",
+        "category": "Art",
+        "link": "https://www.deviantart.com/gydw1n/gallery"
+    },
+    {
+        "title": "Beatspace",
+        "description": "\"A musical runner in space\"",
+        "category": "Games",
+        "link": "https://bolddunkley.itch.io/beatspace"
+    },
+    {
+        "title": "Code with me (if you want to live)",
+        "description": "Retro futuristic music to work/code to.",
+        "category": "Art",
+        "link": "https://www.codewithme.app/"
+    },
+    {
+        "title": "Wallpaper Access",
+        "description": "Some nice minimal wallpapers",
+        "category": "Art",
+        "link": "https://wallpaperaccess.com/4k-minimalist"
+    },
+    {
+        "title": "Github Corners",
+        "description": "A nice github plug for websites",
+        "category": "Web Development",
+        "link": "https://tholman.com/github-corners/"
+    },
+    {
+        "title": "Carbon",
+        "description": "A nice way to get a pretty image of code",
+        "category": "Coding",
+        "link": "https://carbon.now.sh/"
+    },
+    {
+        "title": "Nicky Case",
+        "description": "Amazing interactive learning tools, about many interesting social phenomena. Good reference too.",
+        "category": "Other",
+        "link": "https://ncase.me/"
     }
 ]
