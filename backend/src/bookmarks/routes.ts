@@ -13,9 +13,10 @@ import { Router } from 'express';
 import { nanoid } from 'nanoid';
 
 import type { SessionTools } from '../auth/middleware';
-import { currentSession, mustSession } from '../auth/middleware';
+import { mustSession } from '../auth/middleware';
 import { HttpError } from '../http';
 import type { BookmarkStore, Mutate } from './store';
+import type { Sync } from './sync';
 
 type Scrape = (url: string) => Promise<BookmarkMeta>;
 
@@ -43,8 +44,9 @@ export function bookmarksRouter(deps: {
   mutate: Mutate;
   scrape: Scrape;
   tools: SessionTools;
+  sync: Sync;
 }): Router {
-  const { store, mutate, scrape, tools } = deps;
+  const { store, mutate, scrape, tools, sync } = deps;
   const router = Router();
 
   /**
@@ -78,19 +80,18 @@ export function bookmarksRouter(deps: {
     })();
   };
 
-  router.get('/bookmarks', tools.optional, async (_req, res) => {
-    const token = currentSession(res)?.accessToken;
-    const { file } = await store.read(token);
+  router.get('/bookmarks', async (_req, res) => {
+    const { file } = await store.read();
     res.setHeader('Cache-Control', 'no-store');
     res.json(file);
   });
 
-  router.post('/metadata', tools.required, async (req, res) => {
+  router.post('/metadata', tools.editor, async (req, res) => {
     const { url } = metadataRequestSchema.parse(req.body);
     res.json(await scrape(url));
   });
 
-  router.post('/bookmarks', tools.required, async (req, res) => {
+  router.post('/bookmarks', tools.editor, async (req, res) => {
     const session = mustSession(res);
     const input = bookmarkCreateSchema.parse(req.body);
 
@@ -120,7 +121,7 @@ export function bookmarksRouter(deps: {
     res.status(201).json({ file, bookmark: result });
   });
 
-  router.patch('/bookmarks/:id', tools.required, async (req, res) => {
+  router.patch('/bookmarks/:id', tools.editor, async (req, res) => {
     const session = mustSession(res);
     const id = req.params.id as string;
     const patch = bookmarkPatchSchema.parse(req.body);
@@ -153,7 +154,7 @@ export function bookmarksRouter(deps: {
     res.json({ file, bookmark: result.bookmark });
   });
 
-  router.delete('/bookmarks/:id', tools.required, async (req, res) => {
+  router.delete('/bookmarks/:id', tools.editor, async (req, res) => {
     const session = mustSession(res);
     const id = req.params.id as string;
     const { file } = await mutate(session.accessToken, (current) => {
@@ -168,8 +169,17 @@ export function bookmarksRouter(deps: {
     res.json({ file });
   });
 
+  /** Unpushed changes, and pushing them to GitHub now instead of waiting. */
+  router.get('/sync', tools.editor, (_req, res) => {
+    res.json(sync.status());
+  });
+  router.post('/sync', tools.editor, async (_req, res) => {
+    const result = await sync.syncNow();
+    res.json({ ...result, ...sync.status() });
+  });
+
   /** Renames a tag everywhere; renaming onto an existing tag merges them. */
-  router.put('/tags/:tag', tools.required, async (req, res) => {
+  router.put('/tags/:tag', tools.editor, async (req, res) => {
     const session = mustSession(res);
     const from = tagSchema.parse(req.params.tag);
     const { to } = renameTagSchema.parse(req.body);

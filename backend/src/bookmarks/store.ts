@@ -157,7 +157,10 @@ export type Change<T> = {
  * re-reading it. If the repo changed some other way, the commit is rejected as
  * stale (wrong sha) and retried after a fresh read, so nothing is overwritten.
  */
-export function createMutator(store: BookmarkStore) {
+export function createMutator(
+  store: BookmarkStore,
+  onCommit?: (message: string) => void
+) {
   let queue: Promise<unknown> = Promise.resolve();
   let last: Snapshot | undefined;
 
@@ -191,6 +194,7 @@ export function createMutator(store: BookmarkStore) {
             truncate(out.message, 72)
           );
           last = { file: next, sha: newSha };
+          onCommit?.(out.message);
           return { file: next, result: out.result };
         } catch (error) {
           if (error instanceof ConflictError && attempt < 2) continue;

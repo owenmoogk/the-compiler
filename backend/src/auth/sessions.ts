@@ -98,6 +98,14 @@ export class SessionStore {
     return session;
   }
 
+  /** All live sessions, newest first. */
+  list(): Session[] {
+    this.prune();
+    return [...this.sessions.values()].sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
+  }
+
   create(data: Omit<Session, 'id' | 'createdAt'>): Session {
     const session: Session = {
       ...data,

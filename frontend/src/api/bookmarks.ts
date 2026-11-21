@@ -21,7 +21,7 @@ export async function fetchPublicBookmarks(): Promise<BookmarksFile> {
   return bookmarksFileSchema.parse(await res.json());
 }
 
-/** Fresh read through the backend (skips GitHub's raw CDN cache). */
+/** The backend's copy, which is the source of truth. */
 export async function fetchBookmarks(): Promise<BookmarksFile> {
   return bookmarksFileSchema.parse(await api('/api/bookmarks'));
 }

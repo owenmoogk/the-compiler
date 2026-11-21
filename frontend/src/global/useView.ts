@@ -11,12 +11,11 @@ export function useView() {
     setView((current) => ({ ...current, ...patch }));
   }, []);
 
+  /** One tag at a time: clicking another replaces it, clicking it again clears it. */
   const toggleTag = useCallback((tag: string) => {
     setView((current) => ({
       ...current,
-      tags: current.tags.includes(tag)
-        ? current.tags.filter((t) => t !== tag)
-        : [...current.tags, tag],
+      tags: current.tags.includes(tag) ? [] : [tag],
     }));
   }, []);
 

@@ -29,6 +29,7 @@ const envSchema = z
     BOOKMARKS_PATH: z.string().default('bookmarks.json'),
     DATA_DIR: z.string().default(join(homedir(), '.local/share/the-compiler')),
     LOCAL_BOOKMARKS_FILE: z.string().optional(),
+    SYNC_HOUR: z.coerce.number().int().min(0).max(23).default(3),
     DEV_LOGIN: z
       .enum(['true', 'false'])
       .default('false')
@@ -65,7 +66,12 @@ export type Config = {
   github: { clientId: string; clientSecret: string };
   repo: { fullName: string; branch: string; path: string };
   dataDir: string;
-  localBookmarksFile?: string;
+  /** The source-of-truth bookmarks file on this server. */
+  bookmarksFile: string;
+  /** Push to the GitHub repo (false in local dev without a GitHub App). */
+  syncToGithub: boolean;
+  /** Local hour of day for the daily push. */
+  syncHour: number;
   devLogin: boolean;
 };
 
@@ -96,9 +102,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       path: e.BOOKMARKS_PATH,
     },
     dataDir: resolve(e.DATA_DIR),
-    localBookmarksFile: e.LOCAL_BOOKMARKS_FILE
-      ? resolve(e.LOCAL_BOOKMARKS_FILE)
-      : undefined,
+    bookmarksFile: resolve(
+      e.LOCAL_BOOKMARKS_FILE ?? join(e.DATA_DIR, 'bookmarks.json')
+    ),
+    syncToGithub: !e.LOCAL_BOOKMARKS_FILE,
+    syncHour: e.SYNC_HOUR,
     devLogin: e.DEV_LOGIN,
   };
 }

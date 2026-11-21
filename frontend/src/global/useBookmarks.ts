@@ -11,7 +11,6 @@ export function useBookmarks() {
   const [file, setFile] = useState<BookmarksFile>();
   const [error, setError] = useState<string>();
 
-  const signedIn = session.status === 'signedIn';
   const ready = session.status !== 'loading';
 
   /** Loads the list; resolves to it (or undefined on failure). */
@@ -22,19 +21,17 @@ export function useBookmarks() {
       return next;
     };
     try {
-      if (signedIn) {
-        try {
-          return loaded(await fetchBookmarks());
-        } catch (err) {
-          console.warn('Backend read failed, using public copy', err);
-        }
+      try {
+        return loaded(await fetchBookmarks());
+      } catch (err) {
+        console.warn('Backend read failed, using the GitHub copy', err);
       }
       return loaded(await fetchPublicBookmarks());
     } catch (err) {
       setError(errorMessage(err));
       return undefined;
     }
-  }, [signedIn]);
+  }, []);
 
   useEffect(() => {
     if (ready) void load();

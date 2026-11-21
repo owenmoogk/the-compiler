@@ -3,16 +3,14 @@ import express from 'express';
 import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import type { Request } from 'express';
 
-import {
-  cors,
-  createSessionTools,
-  requireFrontendOrigin,
-} from './auth/middleware';
+import type { SessionTools } from './auth/middleware';
+import { cors, requireFrontendOrigin } from './auth/middleware';
 import { authRouter } from './auth/routes';
 import type { SessionStore } from './auth/sessions';
 import { bookmarksRouter } from './bookmarks/routes';
 import type { BookmarkStore } from './bookmarks/store';
 import { createMutator } from './bookmarks/store';
+import type { Sync } from './bookmarks/sync';
 import type { Config } from './config';
 import { APP_VERSION } from './config';
 import { errorHandler } from './http';
@@ -27,12 +25,15 @@ const clientKey = (req: Request) => {
 export function createApp(deps: {
   config: Config;
   sessions: SessionStore;
+  tools: SessionTools;
   store: BookmarkStore;
+  sync: Sync;
   scrape: (url: string) => Promise<BookmarkMeta>;
 }) {
-  const { config, sessions, store, scrape } = deps;
-  const tools = createSessionTools(config, sessions);
-  const mutate = createMutator(store);
+  const { config, sessions, tools, store, sync, scrape } = deps;
+  const mutate = createMutator(store, (message) => {
+    sync.record(message);
+  });
 
   const app = express();
   app.disable('x-powered-by');
@@ -54,7 +55,7 @@ export function createApp(deps: {
     '/api/metadata',
     rateLimit({ windowMs: 60 * 1000, limit: 30, keyGenerator: clientKey })
   );
-  app.use('/api', bookmarksRouter({ store, mutate, scrape, tools }));
+  app.use('/api', bookmarksRouter({ store, mutate, scrape, tools, sync }));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' });

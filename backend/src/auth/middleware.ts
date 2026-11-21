@@ -80,10 +80,8 @@ export function createSessionTools(config: Config, sessions: SessionStore) {
     return task;
   }
 
-  /** The caller's session with a usable access token, or undefined. */
-  async function load(req: Request): Promise<Session | undefined> {
-    const session = sessions.get(parseCookies(req)[cookieName]);
-    if (!session) return undefined;
+  /** The session with a usable access token (refreshed if needed), or undefined. */
+  async function fresh(session: Session): Promise<Session | undefined> {
     if (
       session.accessExpiresAt &&
       session.accessExpiresAt - REFRESH_MARGIN < Date.now()
@@ -91,6 +89,12 @@ export function createSessionTools(config: Config, sessions: SessionStore) {
       return refresh(session);
     }
     return session;
+  }
+
+  /** The caller's session with a usable access token, or undefined. */
+  async function load(req: Request): Promise<Session | undefined> {
+    const session = sessions.get(parseCookies(req)[cookieName]);
+    return session ? fresh(session) : undefined;
   }
 
   function setCookie(res: Response, session: Session, maxAge: number) {
@@ -129,7 +133,26 @@ export function createSessionTools(config: Config, sessions: SessionStore) {
     next();
   };
 
-  return { load, setCookie, clearCookie, optional, required };
+  /**
+   * Signed in and allowed to push to the bookmarks repo. Edits go to the
+   * server's copy now, so this is what stops other GitHub users editing.
+   */
+  const editor: RequestHandler = async (req, res, next) => {
+    const session = await load(req);
+    if (!session) {
+      clearCookie(res);
+      next(new HttpError(401, 'Sign in first'));
+      return;
+    }
+    if (!session.canEdit) {
+      next(new HttpError(403, "You don't have edit access"));
+      return;
+    }
+    res.locals.session = session;
+    next();
+  };
+
+  return { load, fresh, setCookie, clearCookie, optional, required, editor };
 }
 
 export function currentSession(res: Response): Session | undefined {

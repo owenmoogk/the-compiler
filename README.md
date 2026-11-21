@@ -11,18 +11,25 @@ MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the or
 ## How it works
 
 ```
-browser ──anonymous──▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
+browser ──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
+   │          ├ bookmarks.json on the server: the source of truth, saves are instant
+   │          ├ GitHub App sign-in, sessions (tokens never reach the browser)
+   │          ├ daily push of bookmarks.json to owenmoogk/bookmarks, as you
+   │          └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
    │
-   └──signed in──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
-                     ├ GitHub App sign-in, sessions (tokens never reach the browser)
-                     ├ read / modify / commit bookmarks.json as YOU, via the GitHub API
-                     └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
+   └─ if the server is down ─▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
 ```
 
-- **Data** lives in a separate public repo, `owenmoogk/bookmarks`. Each change is a commit.
-- **Auth** is a GitHub App installed only on that repo. Its user tokens can only touch that
-  repo's contents, and GitHub itself decides who can push. The server holds no PAT.
-- If the server is down, the site still works read-only.
+- **Data** lives on the server (`~/.local/share/the-compiler/bookmarks.json`) and is pushed
+  to the public repo `owenmoogk/bookmarks` once a day at `SYNC_HOUR` (default 3am), as one
+  commit listing that day's changes. On first start the server copies the file from GitHub.
+  The server's copy wins: edits made directly on GitHub are overwritten by the next push.
+- **Pushing** uses the token of the most recent signed-in editor, refreshed automatically.
+  If nobody with edit access has signed in for ~6 months, the push is skipped (and retried
+  hourly) until someone signs in. Editors can also push immediately with `POST /api/sync`.
+- **Auth** is a GitHub App installed only on that repo. Only users with push access to the
+  repo can edit; the server checks this on every change. The server holds no PAT.
+- If the server is down, the site still works read-only from GitHub's copy (up to a day old).
 
 ## Layout
 
@@ -43,7 +50,8 @@ yarn dev                                 # backend :8788 + frontend http://local
 ```
 
 The example `.env` runs without GitHub: bookmarks are read from and written to
-`backend/.data/bookmarks.json`, and "Sign in" logs you in as a fake editor (`DEV_LOGIN`).
+`backend/.data/bookmarks.json`, the daily push goes to `backend/.data/github-stand-in.json`,
+and "Sign in" logs you in as a fake editor (`DEV_LOGIN`).
 To seed it: `yarn migrate --from <old data.json> --out backend/.data/bookmarks.json --scrape`,
 or copy `bookmarks.json` from the bookmarks repo.
 
