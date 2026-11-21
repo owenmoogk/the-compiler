@@ -1,32 +1,32 @@
-/* Plain CSS instead of Mantine components per card: with hundreds of cards,
+/* Plain CSS instead of Mantine components per row: with hundreds of links,
    every component layer costs time on each search keystroke. */
 
-/* As many ~280px columns as fit, so wide screens get more per row. */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--mantine-spacing-xs);
-  padding: 8px 0 4px;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
 }
 
-.card {
+.item {
   position: relative;
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: var(--mantine-spacing-sm);
-  padding: var(--mantine-spacing-xs);
-  border: 1px solid var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-md);
-  background: var(--mantine-color-body);
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
 }
 
-.card[data-selected] {
+.item:hover {
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.item[data-selected] {
   background: var(--mantine-color-blue-light);
-  border-color: var(--mantine-color-blue-filled);
 }
 
-/* The link covers the whole card; the menu button sits above it. */
+/* The link covers the whole row; the menu button sits above it. */
 .link {
   position: absolute;
   inset: 0;
@@ -34,7 +34,8 @@
 }
 
 .icon,
-.text {
+.text,
+.date {
   pointer-events: none;
 }
 
@@ -43,9 +44,13 @@
   flex-shrink: 0;
 }
 
+/* Title, then the site in grey; both shorten with "…" when space runs out. */
 .text {
   min-width: 0;
   flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .title,
@@ -56,18 +61,42 @@
 }
 
 .title {
+  flex: 0 1 auto;
   font-size: var(--mantine-font-size-sm);
   line-height: var(--mantine-line-height-sm);
   font-weight: 500;
 }
 
 .host {
+  flex: 0 10 auto;
+  min-width: 40px;
   font-size: var(--mantine-font-size-xs);
-  line-height: var(--mantine-line-height-xs);
   color: var(--mantine-color-dimmed);
+}
+
+.date {
+  flex-shrink: 0;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .menuButton {
   position: relative;
   flex-shrink: 0;
+}
+
+/* With a mouse, the menu button only shows on the hovered row. */
+@media (hover: hover) {
+  .item:not(:hover) .menuButton:not(:focus-visible, [aria-expanded='true']) {
+    opacity: 0;
+  }
+}
+
+/* On phones, give the title the room instead of the site name. */
+@media (max-width: 30em) {
+  .host {
+    display: none;
+  }
 }

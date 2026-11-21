@@ -68,7 +68,7 @@ export type Config = {
   dataDir: string;
   /** The source-of-truth bookmarks file on this server. */
   bookmarksFile: string;
-  /** Push to the GitHub repo (false in local dev without a GitHub App). */
+  /** Push to the GitHub repo (false in local dev, which only reads it once). */
   syncToGithub: boolean;
   /** Local hour of day for the daily push. */
   syncHour: number;

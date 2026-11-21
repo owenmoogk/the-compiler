@@ -16,7 +16,6 @@ import {
   Skeleton,
   Stack,
   Text,
-  Title,
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
@@ -212,10 +211,6 @@ export default function BookmarksPage() {
 
   return (
     <Stack gap="md">
-      <Title order={1} m={0}>
-        The Compiler
-      </Title>
-
       <Toolbar
         viewParams={viewParams}
         canEdit={canEdit}

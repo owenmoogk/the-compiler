@@ -21,7 +21,8 @@ const RETRY_MS = 60 * 60 * 1000;
 export type SyncResult =
   | { status: 'pushed'; changes: number }
   | { status: 'nothing-to-push' }
-  | { status: 'no-editor' };
+  | { status: 'no-editor' }
+  | { status: 'disabled' };
 
 /**
  * The server's copy of bookmarks.json is the source of truth. Edits are saved
@@ -36,8 +37,10 @@ export async function createSync(deps: {
   tools: SessionTools;
   /** Local hour of day (0-23) to push at. */
   hour: number;
+  /** False in local dev: edits stay in the local file and are never pushed. */
+  pushes: boolean;
 }) {
-  const { local, remote, stateFile, sessions, tools, hour } = deps;
+  const { local, remote, stateFile, sessions, tools, hour, pushes } = deps;
 
   let state: SyncState = { pending: [] };
   try {
@@ -70,6 +73,7 @@ export async function createSync(deps: {
   let running: Promise<SyncResult> | undefined;
 
   async function push(): Promise<SyncResult> {
+    if (!pushes) return { status: 'disabled' };
     const count = state.pending.length;
     if (count === 0) return { status: 'nothing-to-push' };
     const token = await editorToken();
@@ -152,6 +156,7 @@ export async function createSync(deps: {
   return {
     /** Records a saved change so the next sync pushes it. */
     record(message: string) {
+      if (!pushes) return;
       state.pending.push(message);
       void save().catch((error: unknown) => {
         console.error('Could not save sync state:', error);
@@ -165,7 +170,7 @@ export async function createSync(deps: {
     },
     syncNow,
     start() {
-      schedule(msUntilNext());
+      if (pushes) schedule(msUntilNext());
     },
     async flush() {
       await saving;

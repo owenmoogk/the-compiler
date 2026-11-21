@@ -20,11 +20,9 @@ const sessions = await SessionStore.open(
 const tools = createSessionTools(config, sessions);
 
 // Edits go to the file on this server; GitHub gets a copy once a day. In local
-// dev without a GitHub App, a second local file stands in for the repo.
+// dev the file starts as a copy of the public GitHub one and is never pushed.
 const store = localStore(config.bookmarksFile);
-const remote = config.syncToGithub
-  ? githubStore(config)
-  : localStore(join(config.dataDir, 'github-stand-in.json'));
+const remote = githubStore(config);
 await seedLocalCopy(store, remote);
 
 const sync = await createSync({
@@ -34,6 +32,7 @@ const sync = await createSync({
   sessions,
   tools,
   hour: config.syncHour,
+  pushes: config.syncToGithub,
 });
 const tagFix = await normalizeStoredTags(store);
 if (tagFix) {
@@ -54,8 +53,10 @@ const app = createApp({
 const server = app.listen(config.port, config.host, () => {
   console.log(
     `the-compiler backend ${APP_VERSION} on http://${config.host}:${config.port} ` +
-      `(file ${config.bookmarksFile}, pushes to ` +
-      `${config.syncToGithub ? config.repo.fullName : 'a local stand-in'} daily at ${String(config.syncHour)}:00)`
+      `(file ${config.bookmarksFile}, ` +
+      (config.syncToGithub
+        ? `pushes to ${config.repo.fullName} daily at ${String(config.syncHour)}:00)`
+        : `never pushed to GitHub)`)
   );
 });
 

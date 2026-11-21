@@ -7,6 +7,13 @@ import { FaEllipsisV, FaPen, FaTrash } from 'react-icons/fa';
 import Favicon from './Favicon';
 import classes from './GroupedBookmarks.module.css';
 
+const dateFormat = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+});
+const formatDate = (iso: string) => dateFormat.format(new Date(iso));
+
 /** Pass stable (memoized) callbacks so unchanged cards skip re-rendering. */
 type Actions = {
   canEdit: boolean;
@@ -15,7 +22,7 @@ type Actions = {
   onToggleSelect: (id: string) => void;
 };
 
-/** One headed block of link cards per tag. */
+/** One headed list of links per tag. */
 export default memo(function GroupedBookmarks({
   groups,
   selected,
@@ -35,9 +42,9 @@ export default memo(function GroupedBookmarks({
               {bookmarks.length}
             </Text>
           </Group>
-          <div className={classes.grid}>
+          <div className={classes.list}>
             {bookmarks.map((bookmark) => (
-              <BookmarkCard
+              <BookmarkItem
                 key={bookmark.id}
                 bookmark={bookmark}
                 isSelected={selected.has(bookmark.id)}
@@ -51,10 +58,10 @@ export default memo(function GroupedBookmarks({
   );
 });
 
-// The link covers the whole card; the ⋮ button sits above it (a button can't
-// go inside a link). Editors Shift-click a card to select it; Ctrl-click still
+// The link covers the whole row; the ⋮ button sits above it (a button can't
+// go inside a link). Editors Shift-click a row to select it; Ctrl-click still
 // opens a new tab.
-const BookmarkCard = memo(function BookmarkCard({
+const BookmarkItem = memo(function BookmarkItem({
   bookmark: b,
   isSelected,
   canEdit,
@@ -64,7 +71,7 @@ const BookmarkCard = memo(function BookmarkCard({
 }: Actions & { bookmark: Bookmark; isSelected: boolean }) {
   const title = displayTitle(b);
   return (
-    <div className={classes.card} data-selected={isSelected || undefined}>
+    <div className={classes.item} data-selected={isSelected || undefined}>
       <a
         className={classes.link}
         href={b.url}
@@ -86,12 +93,15 @@ const BookmarkCard = memo(function BookmarkCard({
         }}
       />
       <span className={classes.icon}>
-        <Favicon url={b.url} favicon={b.meta?.favicon} size={24} />
+        <Favicon url={b.url} favicon={b.meta?.favicon} size={18} />
       </span>
-      <div className={classes.text}>
-        <div className={classes.title}>{title}</div>
-        <div className={classes.host}>{hostnameOf(b.url)}</div>
-      </div>
+      <span className={classes.text}>
+        <span className={classes.title}>{title}</span>
+        <span className={classes.host}>{hostnameOf(b.url)}</span>
+      </span>
+      <time className={classes.date} dateTime={b.addedAt}>
+        {formatDate(b.addedAt)}
+      </time>
       {canEdit && <EditMenu bookmark={b} onEdit={onEdit} onDelete={onDelete} />}
     </div>
   );

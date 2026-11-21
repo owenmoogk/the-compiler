@@ -49,11 +49,10 @@ cp backend/.env.example backend/.env    # then fill in SESSION_KEY (command is i
 yarn dev                                 # backend :8788 + frontend http://localhost:3000/the-compiler/
 ```
 
-The example `.env` runs without GitHub: bookmarks are read from and written to
-`backend/.data/bookmarks.json`, the daily push goes to `backend/.data/github-stand-in.json`,
-and "Sign in" logs you in as a fake editor (`DEV_LOGIN`).
-To seed it: `yarn migrate --from <old data.json> --out backend/.data/bookmarks.json --scrape`,
-or copy `bookmarks.json` from the bookmarks repo.
+The example `.env` runs without a GitHub App: on first start, `backend/.data/bookmarks.json`
+is copied from the public bookmarks repo, edits are saved to it and never pushed back,
+and "Sign in" logs you in as a fake editor (`DEV_LOGIN`). Delete that file to start over
+from the current GitHub copy.
 
 ```sh
 yarn lint        # eslint + prettier, all workspaces

@@ -92,7 +92,7 @@ export function renameTagIn(
 export type TagGroup = { tag: string | null; bookmarks: Bookmark[] };
 
 /**
- * One group per tag (A–Z), each sorted by title; untagged links last. A link
+ * One group per tag (A–Z), each newest first; untagged links last. A link
  * with several tags appears in each of its groups. With `only`, just those tags.
  */
 export function groupByTag(
@@ -108,13 +108,15 @@ export function groupByTag(
       groups.set(tag, [...(groups.get(tag) ?? []), bookmark]);
     }
   }
-  const byTitle = (a: Bookmark, b: Bookmark) =>
+  // Newest first; same-day links A–Z.
+  const byDate = (a: Bookmark, b: Bookmark) =>
+    b.addedAt.localeCompare(a.addedAt) ||
     compareText(displayTitle(a), displayTitle(b));
   const result: TagGroup[] = [...groups]
     .sort(([a], [b]) => compareText(a, b))
-    .map(([tag, list]) => ({ tag, bookmarks: list.sort(byTitle) }));
+    .map(([tag, list]) => ({ tag, bookmarks: list.sort(byDate) }));
   if (untagged.length && !only.length) {
-    result.push({ tag: null, bookmarks: untagged.sort(byTitle) });
+    result.push({ tag: null, bookmarks: untagged.sort(byDate) });
   }
   return result;
 }
