@@ -2,7 +2,7 @@ const env = import.meta.env;
 
 /** Backend origin. In dev, Vite proxies /auth and /api, so it is same-origin. */
 export const API_URL =
-  env.VITE_API_URL ?? (env.DEV ? '' : 'https://compiler-api.owenmoogk.com');
+  env.VITE_API_URL ?? (env.DEV ? '' : 'https://compiler.owenmoogk.com');
 
 /**
  * Anonymous visitors read straight from GitHub, so the site stays readable

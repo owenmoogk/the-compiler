@@ -13,7 +13,7 @@ MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the or
 ```
 browser ──anonymous──▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
    │
-   └──signed in──▶ compiler-api.owenmoogk.com (Cloudflare Tunnel → basement server)
+   └──signed in──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
                      ├ GitHub App sign-in, sessions (tokens never reach the browser)
                      ├ read / modify / commit bookmarks.json as YOU, via the GitHub API
                      └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
@@ -76,7 +76,7 @@ Create the public repo `owenmoogk/bookmarks` and push `bookmarks.json` (generate
 
 ### 2. GitHub App
 GitHub → Settings → Developer settings → GitHub Apps → New:
-- **Callback URL:** `https://compiler-api.owenmoogk.com/auth/callback`
+- **Callback URL:** `https://compiler.owenmoogk.com/auth/callback`
 - **Expire user authorization tokens:** on
 - **Webhook:** off
 - **Repository permissions:** Contents: *Read and write* (Metadata: read is automatic). Nothing else.
@@ -100,7 +100,7 @@ command="/home/USER/bin/compiler-deploy.sh",no-port-forwarding,no-agent-forwardi
 ```
 
 ### 4. Cloudflare
-In the existing tunnel, add a public hostname `compiler-api.owenmoogk.com` → `http://localhost:8788`.
+In the existing tunnel, add a public hostname `compiler.owenmoogk.com` → `http://localhost:8788`.
 SSH for deploys reuses the existing SSH hostname and Access service token.
 
 ### 5. This repo's settings
