@@ -1,11 +1,112 @@
 # The Compiler
-Place for useful files and links to resources.
 
-MASSIVE thanks to janik. He inspired this, and I also used some of his code. He is the man:
-github.com/JanikThePanic
+Useful links and resources, live at **https://owenmoogk.com/the-compiler/**.
 
-Janik, if you are reading this, thank you.
+Anyone can browse, search and filter by tag. Signing in with GitHub (with push access to
+[owenmoogk/bookmarks](https://github.com/owenmoogk/bookmarks)) turns on editing: add links,
+edit, delete, rename tags, and refresh each link's title/favicon.
 
-I do a lot of the same projects that he does, because he does them really well and I want to push myself to do the same.
+MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the original version.
 
-I try to stay on the side of being inspired and not copying, but this one might be a little copied. Either way, I learned a lot about web dev and JS.
+## How it works
+
+```
+browser ──anonymous──▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
+   │
+   └──signed in──▶ compiler-api.owenmoogk.com (Cloudflare Tunnel → basement server)
+                     ├ GitHub App sign-in, sessions (tokens never reach the browser)
+                     ├ read / modify / commit bookmarks.json as YOU, via the GitHub API
+                     └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
+```
+
+- **Data** lives in a separate public repo, `owenmoogk/bookmarks`. Each change is a commit.
+- **Auth** is a GitHub App installed only on that repo. Its user tokens can only touch that
+  repo's contents, and GitHub itself decides who can push. The server holds no PAT.
+- If the server is down, the site still works read-only.
+
+## Layout
+
+Yarn workspaces:
+
+| Folder | What |
+|---|---|
+| `shared/` | `@compiler/shared`: zod schema for `bookmarks.json`, tag helpers, filter/sort logic |
+| `backend/` | Express 5 API, bundled by tsup into one file, `backend/dist/server.js` |
+| `frontend/` | Vite + React 19 + Mantine 8 (from frontend-template), served by GitHub Pages |
+
+## Development
+
+```sh
+yarn install
+cp backend/.env.example backend/.env    # then fill in SESSION_KEY (command is in the file)
+yarn dev                                 # backend :8788 + frontend http://localhost:3000/the-compiler/
+```
+
+The example `.env` runs without GitHub: bookmarks are read from and written to
+`backend/.data/bookmarks.json`, and "Sign in" logs you in as a fake editor (`DEV_LOGIN`).
+To seed it: `yarn migrate --from <old data.json> --out backend/.data/bookmarks.json --scrape`,
+or copy `bookmarks.json` from the bookmarks repo.
+
+```sh
+yarn lint        # eslint + prettier, all workspaces
+yarn typecheck
+yarn build
+```
+
+## Releasing
+
+```sh
+yarn ver:patch   # or ver:minor / ver:major
+```
+
+This bumps the root version and pushes a `vX.Y.Z` tag. CI then:
+
+1. lints, typechecks and builds;
+2. creates a GitHub Release with `backend-dist` and `frontend-dist` zips;
+3. deploys `frontend/dist` to GitHub Pages;
+4. SSHes to the server through the Cloudflare Tunnel and pipes the backend zip into
+   `backend/deploy/compiler-deploy.sh`. That script swaps the release in, restarts the
+   service, checks `/healthz`, and rolls back if the check fails.
+
+## One-time setup
+
+### 1. Bookmarks repo
+Create the public repo `owenmoogk/bookmarks` and push `bookmarks.json` (generated with
+`yarn migrate ... --git-dir . --scrape`).
+
+### 2. GitHub App
+GitHub → Settings → Developer settings → GitHub Apps → New:
+- **Callback URL:** `https://compiler-api.owenmoogk.com/auth/callback`
+- **Expire user authorization tokens:** on
+- **Webhook:** off
+- **Repository permissions:** Contents: *Read and write* (Metadata: read is automatic). Nothing else.
+- **Where can it be installed:** only this account
+
+Then generate a client secret, and **install the app on `owenmoogk/bookmarks` only**.
+
+### 3. Server (same box and pattern as learn-mcp)
+```sh
+mkdir -p ~/.config/the-compiler
+cp backend/deploy/env.example ~/.config/the-compiler/env   # fill in, then chmod 600
+sudo cp backend/deploy/compiler.service /etc/systemd/system/   # replace USER, HOME, NODE
+sudo install -m 0440 backend/deploy/compiler-sudoers /etc/sudoers.d/compiler   # replace USER
+cp backend/deploy/compiler-deploy.sh ~/bin/ && chmod +x ~/bin/compiler-deploy.sh
+sudo systemctl daemon-reload && sudo systemctl enable compiler
+```
+Add a **new** deploy key to `~/.ssh/authorized_keys`. A forced command is set per key,
+so it can't share learn-mcp's key:
+```
+command="/home/USER/bin/compiler-deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty ssh-ed25519 AAAA... the-compiler-deploy
+```
+
+### 4. Cloudflare
+In the existing tunnel, add a public hostname `compiler-api.owenmoogk.com` → `http://localhost:8788`.
+SSH for deploys reuses the existing SSH hostname and Access service token.
+
+### 5. This repo's settings
+- **Pages:** Source = *GitHub Actions*. After the first deploy, delete the old `gh-pages` branch.
+- **Secrets:** `DEPLOY_SSH_KEY` (the new key's private half), `DEPLOY_KNOWN_HOSTS`,
+  `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`
+- **Variables:** `DEPLOY_HOST`, `DEPLOY_USER`
+
+Then run `yarn ver:major` to release v2.0.0.

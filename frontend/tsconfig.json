@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "types": [],
+    "baseUrl": "./src",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@api/*": ["api/*"],
+      "@global/*": ["global/*"]
+    }
+  },
+  "include": ["src/**/*", "vite-env.d.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}
