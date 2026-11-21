@@ -15,12 +15,13 @@ export class ConflictError extends Error {}
 
 export type BookmarkStore = {
   read(token?: string): Promise<Snapshot>;
+  /** Commits the file and resolves to its new sha. */
   write(
     token: string,
     file: BookmarksFile,
     sha: string | null,
     message: string
-  ): Promise<void>;
+  ): Promise<string>;
 };
 
 function serialize(file: BookmarksFile): string {
@@ -82,7 +83,7 @@ export function githubStore(config: Config): BookmarkStore {
 
     async write(token, file, sha, message) {
       try {
-        await githubApi(token, contentsPath, {
+        const res = await githubApi(token, contentsPath, {
           method: 'PUT',
           body: JSON.stringify({
             message,
@@ -91,6 +92,8 @@ export function githubStore(config: Config): BookmarkStore {
             ...(sha ? { sha } : {}),
           }),
         });
+        const body = (await res.json()) as { content: { sha: string } };
+        return body.content.sha;
       } catch (error) {
         if (
           error instanceof GithubError &&
@@ -129,10 +132,12 @@ export function localStore(path: string): BookmarkStore {
       if ((current === null ? null : hash(current)) !== sha) {
         throw new ConflictError('local file changed');
       }
+      const text = serialize(file);
       await mkdir(dirname(path), { recursive: true });
-      await writeFile(`${path}.tmp`, serialize(file));
+      await writeFile(`${path}.tmp`, text);
       await rename(`${path}.tmp`, path);
       console.log(`[local commit] ${message}`);
+      return hash(text);
     },
   };
 }
@@ -147,9 +152,14 @@ export type Change<T> = {
  * Read, modify, commit. Writes are serialized in-process, and a commit that
  * loses a race (someone else committed in between) is retried on fresh data.
  * Do slow work (scraping) before calling this, not inside `change`.
+ *
+ * The file from the last commit is kept in memory so the next change can skip
+ * re-reading it. If the repo changed some other way, the commit is rejected as
+ * stale (wrong sha) and retried after a fresh read, so nothing is overwritten.
  */
 export function createMutator(store: BookmarkStore) {
   let queue: Promise<unknown> = Promise.resolve();
+  let last: Snapshot | undefined;
 
   return async function mutate<T>(
     token: string,
@@ -157,11 +167,30 @@ export function createMutator(store: BookmarkStore) {
   ): Promise<{ file: BookmarksFile; result: T }> {
     const run = async () => {
       for (let attempt = 0; ; attempt++) {
-        const { file, sha } = await store.read(token);
-        const out = change(structuredClone(file));
-        const next = bookmarksFileSchema.parse(out.file);
+        const cached = last;
+        const { file, sha } = cached ?? (await store.read(token));
+        let out: Change<T>;
         try {
-          await store.write(token, next, sha, truncate(out.message, 72));
+          out = change(structuredClone(file));
+        } catch (error) {
+          // e.g. "not found" because the repo was edited elsewhere: re-check
+          // against fresh data before reporting it.
+          if (cached) {
+            last = undefined;
+            continue;
+          }
+          throw error;
+        }
+        const next = bookmarksFileSchema.parse(out.file);
+        last = undefined;
+        try {
+          const newSha = await store.write(
+            token,
+            next,
+            sha,
+            truncate(out.message, 72)
+          );
+          last = { file: next, sha: newSha };
           return { file: next, result: out.result };
         } catch (error) {
           if (error instanceof ConflictError && attempt < 2) continue;
