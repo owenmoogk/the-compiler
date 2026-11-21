@@ -1,12 +1,19 @@
-import type { Bookmark, BookmarkMeta, BookmarksFile } from '@compiler/shared';
-import { hostnameOf, sameUrl } from '@compiler/shared';
+import type {
+  Bookmark,
+  BookmarkMeta,
+  BookmarksFile,
+  Section,
+} from '@compiler/shared';
+import { hostnameOf, sameUrl, SECTION_INFO, SECTIONS } from '@compiler/shared';
 import {
   Button,
+  Input,
   Group,
   Image,
   Loader,
   Modal,
   Paper,
+  SegmentedControl,
   Stack,
   Text,
   Textarea,
@@ -37,6 +44,12 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** A custom title, or null when it's empty or just the fetched one. */
+function titleOverride(value: string, fetched?: string): string | null {
+  const title = value.trim();
+  return title && title !== fetched ? title : null;
 }
 
 type Preview = {
@@ -104,23 +117,35 @@ function PreviewCard({ preview }: { preview?: Preview }) {
 
 function BookmarkForm({
   bookmark,
-  allTags,
+  sectionTags,
+  defaultSection,
   onSaved,
   onCancel,
 }: {
   bookmark?: Bookmark;
-  allTags: string[];
+  /** Tags already used in each section, offered as suggestions. */
+  sectionTags: Record<Section, string[]>;
+  defaultSection?: Section;
   onSaved: (file: BookmarksFile, saved: Bookmark) => void;
   onCancel: () => void;
 }) {
-  const form = useForm({
+  const form = useForm<{
+    url: string;
+    title: string;
+    notes: string;
+    section: Section | '';
+    tags: string[];
+  }>({
     initialValues: {
       url: bookmark?.url ?? '',
-      title: bookmark?.title ?? '',
+      // Show the fetched title too, so there's something to edit.
+      title: bookmark?.title ?? bookmark?.meta?.title ?? '',
       notes: bookmark?.notes ?? '',
+      section: bookmark?.section ?? defaultSection ?? '',
       tags: bookmark?.tags ?? [],
     },
     validate: {
+      section: (value) => (value ? null : 'Pick a section'),
       url: (value) =>
         isHttpUrl(value.trim()) ? null : 'Enter a full http(s) URL',
     },
@@ -159,20 +184,25 @@ function BookmarkForm({
   }, [debouncedUrl, bookmark]);
 
   const save = async (values: typeof form.values) => {
+    if (!values.section) return;
+    const section = values.section;
     setSaving(true);
     const url = values.url.trim();
     try {
       const result = bookmark
         ? await updateBookmark(bookmark.id, {
             url,
-            title: values.title.trim() || null,
+            // Unchanged fetched title: keep following the page's own title.
+            title: titleOverride(values.title, bookmark.meta?.title),
             notes: values.notes.trim() || null,
+            section,
             tags: values.tags,
           })
         : await createBookmark({
             url,
             title: values.title.trim() || undefined,
             notes: values.notes.trim() || undefined,
+            section,
             tags: values.tags,
             meta:
               preview?.url === url && !preview.loading
@@ -214,8 +244,25 @@ function BookmarkForm({
           maxRows={6}
           {...form.getInputProps('notes')}
         />
+        <Input.Wrapper label="Section" error={form.errors.section}>
+          <SegmentedControl
+            fullWidth
+            data={SECTIONS.map((value) => ({
+              value,
+              label: SECTION_INFO[value].label,
+            }))}
+            value={form.values.section}
+            onChange={(value) =>
+              form.setFieldValue('section', value as Section)
+            }
+          />
+        </Input.Wrapper>
         <TagPicker
-          allTags={allTags}
+          allTags={
+            form.values.section
+              ? sectionTags[form.values.section]
+              : [...new Set(Object.values(sectionTags).flat())]
+          }
           value={form.values.tags}
           onChange={(tags) => form.setFieldValue('tags', tags)}
         />
@@ -235,13 +282,16 @@ function BookmarkForm({
 export default function BookmarkModal({
   opened,
   bookmark,
-  allTags,
+  sectionTags,
+  defaultSection,
   onClose,
   onSaved,
 }: {
   opened: boolean;
   bookmark?: Bookmark;
-  allTags: string[];
+  /** Tags already used in each section, offered as suggestions. */
+  sectionTags: Record<Section, string[]>;
+  defaultSection?: Section;
   onClose: () => void;
   onSaved: (file: BookmarksFile, saved: Bookmark) => void;
 }) {
@@ -256,7 +306,8 @@ export default function BookmarkModal({
         <BookmarkForm
           key={bookmark?.id ?? 'new'}
           bookmark={bookmark}
-          allTags={allTags}
+          sectionTags={sectionTags}
+          defaultSection={defaultSection}
           onSaved={onSaved}
           onCancel={onClose}
         />

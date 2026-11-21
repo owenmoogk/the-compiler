@@ -1,24 +1,44 @@
-import type { Bookmark, BookmarksFile } from '@compiler/shared';
+import type { Bookmark, BookmarksFile, Section } from '@compiler/shared';
 import {
   countTags,
+  sectionOf,
+  SECTIONS,
   displayTitle,
   filterBookmarks,
-  sortBookmarks,
+  groupByTag,
 } from '@compiler/shared';
-import { Alert, Button, Skeleton, Stack, Text, Title } from '@mantine/core';
+import {
+  Affix,
+  Alert,
+  Button,
+  Group,
+  Paper,
+  Skeleton,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { useMemo, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { deleteBookmark } from '@api/bookmarks';
+import { deleteBookmark, deleteBookmarks } from '@api/bookmarks';
 import { errorMessage } from '@api/client';
 import { useSession } from '@global/session';
 import { useBookmarks } from '@global/useBookmarks';
 import { useView } from '@global/useView';
 
 import BookmarkModal from './BookmarkModal';
-import BookmarkTable from './BookmarkTable';
+import GroupedBookmarks from './GroupedBookmarks';
 import RenameTagModal from './RenameTagModal';
+import SectionTabs from './SectionTabs';
 import TagCloud from './TagCloud';
 import Toolbar from './Toolbar';
 
@@ -33,16 +53,43 @@ export default function BookmarksPage() {
   const { canEdit } = useSession();
   const { file, setFile, error, reload } = useBookmarks();
   const viewParams = useView();
-  const { view, toggleTag } = viewParams;
+  const { view } = viewParams;
 
   const [editing, setEditing] = useState<{ bookmark?: Bookmark } | null>(null);
   const [renaming, setRenaming] = useState(false);
+  // Cards picked with Shift-click, deleted together with the Delete key.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const confirming = useRef(false);
 
   const bookmarks = useMemo(() => file?.bookmarks ?? [], [file]);
   const tagCounts = useMemo(() => countTags(bookmarks), [bookmarks]);
+  const sectionTags = useMemo(
+    () =>
+      Object.fromEntries(
+        SECTIONS.map((section) => [
+          section,
+          countTags(
+            bookmarks.filter((b) => sectionOf(b) === section),
+            'name'
+          ).map((t) => t.tag),
+        ])
+      ) as Record<Section, string[]>,
+    [bookmarks]
+  );
+  // Tag pills for the current section only.
+  const sectionTagCounts = useMemo(
+    () => countTags(bookmarks.filter((b) => sectionOf(b) === view.section)),
+    [bookmarks, view.section]
+  );
+  // The search box updates right away; the (slower) list catches up after.
+  const listView = useDeferredValue(view);
   const visible = useMemo(
-    () => sortBookmarks(filterBookmarks(bookmarks, view), view.sort),
-    [bookmarks, view]
+    () => filterBookmarks(bookmarks, listView),
+    [bookmarks, listView]
+  );
+  const groups = useMemo(
+    () => groupByTag(visible, listView.tags),
+    [visible, listView]
   );
 
   // A link saved before its title/favicon were fetched gets them from the
@@ -66,22 +113,102 @@ export default function BookmarksPage() {
     });
   };
 
-  const confirmDelete = (bookmark: Bookmark) =>
+  const editBookmark = useCallback(
+    (bookmark: Bookmark) => setEditing({ bookmark }),
+    []
+  );
+
+  const confirmDelete = useCallback(
+    (bookmark: Bookmark) =>
+      modals.openConfirmModal({
+        title: 'Delete link?',
+        children: (
+          <Text size="sm">"{displayTitle(bookmark)}" will be removed.</Text>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: () =>
+          void deleteBookmark(bookmark.id)
+            .then((result) => setFile(result.file))
+            .catch(fail),
+      }),
+    [setFile]
+  );
+
+  const toggleSelect = useCallback(
+    (id: string) =>
+      setSelected((current) => {
+        const next = new Set(current);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      }),
+    []
+  );
+
+  const confirmDeleteSelected = () => {
+    const picked = bookmarks.filter((b) => selected.has(b.id));
+    if (!picked.length || confirming.current) return;
+    confirming.current = true;
+    const shown = picked.slice(0, 8);
     modals.openConfirmModal({
-      title: 'Delete link?',
+      title: `Delete ${String(picked.length)} link${picked.length === 1 ? '' : 's'}?`,
       children: (
-        <Text size="sm">
-          "{displayTitle(bookmark)}" will be removed. It stays in the bookmarks
-          repo's history.
-        </Text>
+        <Stack gap={4}>
+          {shown.map((b) => (
+            <Text key={b.id} size="sm" truncate>
+              {displayTitle(b)}
+            </Text>
+          ))}
+          {picked.length > shown.length && (
+            <Text size="sm" c="dimmed">
+              and {picked.length - shown.length} more
+            </Text>
+          )}
+        </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      // Focused, so Enter confirms.
+      confirmProps: { color: 'red', 'data-autofocus': true },
+      onClose: () => {
+        confirming.current = false;
+      },
       onConfirm: () =>
-        void deleteBookmark(bookmark.id)
-          .then((result) => setFile(result.file))
+        void deleteBookmarks(picked.map((b) => b.id))
+          .then((result) => {
+            setFile(result.file);
+            setSelected(new Set());
+            notifications.show({
+              color: 'green',
+              message: `Deleted ${String(result.deleted)} link${result.deleted === 1 ? '' : 's'}`,
+            });
+          })
           .catch(fail),
     });
+  };
+
+  // Delete/Backspace deletes the selection; Escape clears it.
+  const deleteSelected = useRef(confirmDeleteSelected);
+  deleteSelected.current = confirmDeleteSelected;
+  useEffect(() => {
+    if (!canEdit || !selected.size) return;
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest('input, textarea, select, [contenteditable="true"]')
+      ) {
+        return;
+      }
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        deleteSelected.current();
+      } else if (event.key === 'Escape' && !confirming.current) {
+        setSelected(new Set());
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canEdit, selected.size]);
 
   return (
     <Stack gap="md">
@@ -94,9 +221,14 @@ export default function BookmarksPage() {
         canEdit={canEdit}
         onAdd={() => setEditing({})}
       />
+      <SectionTabs
+        viewParams={viewParams}
+        bookmarks={bookmarks}
+        query={listView.query}
+      />
       <TagCloud
         viewParams={viewParams}
-        tagCounts={tagCounts}
+        tagCounts={sectionTagCounts}
         canEdit={canEdit}
         onRename={() => setRenaming(true)}
       />
@@ -116,13 +248,14 @@ export default function BookmarksPage() {
             <Skeleton key={i} h={44} />
           ))}
         </Stack>
-      ) : visible.length ? (
-        <BookmarkTable
-          bookmarks={visible}
+      ) : groups.length ? (
+        <GroupedBookmarks
+          groups={groups}
           canEdit={canEdit}
-          onTagClick={toggleTag}
-          onEdit={(bookmark) => setEditing({ bookmark })}
+          onEdit={editBookmark}
           onDelete={confirmDelete}
+          selected={selected}
+          onToggleSelect={toggleSelect}
         />
       ) : (
         <Text c="dimmed" ta="center" py="xl">
@@ -132,10 +265,38 @@ export default function BookmarksPage() {
         </Text>
       )}
 
+      {canEdit && selected.size > 0 && (
+        <Affix position={{ bottom: 20, left: 0, right: 0 }}>
+          <Group justify="center">
+            <Paper shadow="md" withBorder radius="xl" px="md" py={8}>
+              <Group gap="sm" wrap="nowrap">
+                <Text size="sm" fw={500}>
+                  {selected.size} selected
+                </Text>
+                <Text size="xs" c="dimmed" visibleFrom="xs">
+                  Shift-click to add more · Delete to remove · Esc to clear
+                </Text>
+                <Button size="xs" color="red" onClick={confirmDeleteSelected}>
+                  Delete
+                </Button>
+                <Button
+                  size="xs"
+                  variant="default"
+                  onClick={() => setSelected(new Set())}
+                >
+                  Clear
+                </Button>
+              </Group>
+            </Paper>
+          </Group>
+        </Affix>
+      )}
+
       <BookmarkModal
         opened={editing !== null}
         bookmark={editing?.bookmark}
-        allTags={tagCounts.map((t) => t.tag)}
+        sectionTags={sectionTags}
+        defaultSection={view.section}
         onClose={() => setEditing(null)}
         onSaved={onSaved}
       />

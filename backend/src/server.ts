@@ -3,7 +3,11 @@ import { join } from 'node:path';
 import { createApp } from './app';
 import { createSessionTools } from './auth/middleware';
 import { SessionStore } from './auth/sessions';
-import { githubStore, localStore } from './bookmarks/store';
+import {
+  githubStore,
+  localStore,
+  normalizeStoredTags,
+} from './bookmarks/store';
 import { createSync, seedLocalCopy } from './bookmarks/sync';
 import { APP_VERSION, loadConfig } from './config';
 import { scrapeMetadata } from './metadata';
@@ -31,6 +35,11 @@ const sync = await createSync({
   tools,
   hour: config.syncHour,
 });
+const tagFix = await normalizeStoredTags(store);
+if (tagFix) {
+  sync.record(tagFix);
+  console.log(tagFix);
+}
 sync.start();
 
 const app = createApp({

@@ -47,6 +47,12 @@ export async function deleteBookmark(id: string): Promise<FileResponse> {
   return api(`/api/bookmarks/${id}`, { method: 'DELETE' });
 }
 
+export async function deleteBookmarks(
+  ids: string[]
+): Promise<FileResponse & { deleted: number }> {
+  return api('/api/bookmarks/delete', { method: 'POST', body: { ids } });
+}
+
 export async function renameTag(
   from: string,
   to: string

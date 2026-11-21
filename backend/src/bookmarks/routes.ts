@@ -2,12 +2,13 @@ import type { Bookmark, BookmarkMeta } from '@compiler/shared';
 import {
   bookmarkCreateSchema,
   bookmarkPatchSchema,
+  deleteManySchema,
   displayTitle,
   metadataRequestSchema,
   renameTagIn,
   renameTagSchema,
   sameUrl,
-  tagSchema,
+  storedTagSchema,
 } from '@compiler/shared';
 import { Router } from 'express';
 import { nanoid } from 'nanoid';
@@ -104,6 +105,7 @@ export function bookmarksRouter(deps: {
         url: input.url,
         title: input.title,
         notes: input.notes,
+        section: input.section,
         tags: input.tags,
         addedAt: new Date().toISOString(),
         meta: input.meta,
@@ -136,6 +138,7 @@ export function bookmarksRouter(deps: {
       const next: Bookmark = {
         ...old,
         url: patch.url ?? old.url,
+        section: patch.section ?? old.section,
         tags: patch.tags ?? old.tags,
         title: patch.title === null ? undefined : (patch.title ?? old.title),
         notes: patch.notes === null ? undefined : (patch.notes ?? old.notes),
@@ -169,6 +172,24 @@ export function bookmarksRouter(deps: {
     res.json({ file });
   });
 
+  /** Deletes several links in one change (missing ids are ignored). */
+  router.post('/bookmarks/delete', tools.editor, async (req, res) => {
+    const session = mustSession(res);
+    const { ids } = deleteManySchema.parse(req.body);
+    const remove = new Set(ids);
+    const { file, result } = await mutate(session.accessToken, (current) => {
+      const removed = current.bookmarks.filter((b) => remove.has(b.id));
+      if (!removed.length) throw new HttpError(404, 'Bookmarks not found');
+      current.bookmarks = current.bookmarks.filter((b) => !remove.has(b.id));
+      const message =
+        removed.length === 1
+          ? `Delete: ${displayTitle(removed[0])}`
+          : `Delete ${String(removed.length)} links: ${removed.map(displayTitle).join(', ')}`;
+      return { file: current, message, result: removed.length };
+    });
+    res.json({ file, deleted: result });
+  });
+
   /** Unpushed changes, and pushing them to GitHub now instead of waiting. */
   router.get('/sync', tools.editor, (_req, res) => {
     res.json(sync.status());
@@ -181,7 +202,7 @@ export function bookmarksRouter(deps: {
   /** Renames a tag everywhere; renaming onto an existing tag merges them. */
   router.put('/tags/:tag', tools.editor, async (req, res) => {
     const session = mustSession(res);
-    const from = tagSchema.parse(req.params.tag);
+    const from = storedTagSchema.parse(req.params.tag);
     const { to } = renameTagSchema.parse(req.body);
     const { file } = await mutate(session.accessToken, (current) => {
       if (!current.bookmarks.some((b) => b.tags.includes(from))) {

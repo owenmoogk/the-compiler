@@ -1,5 +1,9 @@
 import type { BookmarksFile } from '@compiler/shared';
-import { bookmarksFileSchema, emptyBookmarksFile } from '@compiler/shared';
+import {
+  bookmarksFileSchema,
+  emptyBookmarksFile,
+  normalizeTags,
+} from '@compiler/shared';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -219,4 +223,26 @@ export type Mutate = ReturnType<typeof createMutator>;
 function truncate(text: string, max: number): string {
   const oneLine = text.replace(/\s+/g, ' ').trim();
   return oneLine.length > max ? `${oneLine.slice(0, max - 1)}…` : oneLine;
+}
+
+/**
+ * Rewrites any tags not in the current form (e.g. old "web-development" →
+ * "Web Development"). Run at startup; returns the commit message if anything
+ * changed.
+ */
+export async function normalizeStoredTags(
+  store: BookmarkStore
+): Promise<string | undefined> {
+  const { file, sha } = await store.read();
+  let changed = 0;
+  const bookmarks = file.bookmarks.map((bookmark) => {
+    const tags = normalizeTags(bookmark.tags);
+    if (tags.join('\n') === bookmark.tags.join('\n')) return bookmark;
+    changed++;
+    return { ...bookmark, tags };
+  });
+  if (!changed) return undefined;
+  const message = `Convert tags to Title Case (${String(changed)} links)`;
+  await store.write('', { ...file, bookmarks }, sha, message);
+  return message;
 }
