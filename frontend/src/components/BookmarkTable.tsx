@@ -14,7 +14,6 @@ import {
   FaEllipsisV,
   FaExclamationTriangle,
   FaPen,
-  FaSyncAlt,
   FaTrash,
 } from 'react-icons/fa';
 
@@ -36,18 +35,14 @@ const shrinkable = (width: string) =>
 export default function BookmarkTable({
   bookmarks,
   canEdit,
-  refreshing,
   onTagClick,
   onEdit,
-  onRefresh,
   onDelete,
 }: {
   bookmarks: Bookmark[];
   canEdit: boolean;
-  refreshing: ReadonlySet<string>;
   onTagClick: (tag: string) => void;
   onEdit: (bookmark: Bookmark) => void;
-  onRefresh: (bookmark: Bookmark) => void;
   onDelete: (bookmark: Bookmark) => void;
 }) {
   return (
@@ -128,18 +123,6 @@ export default function BookmarkTable({
               {canEdit && (
                 <Table.Td w={1}>
                   <Group gap={2} wrap="nowrap" justify="end">
-                    <Tooltip label="Refresh title & favicon">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        loading={refreshing.has(bookmark.id)}
-                        onClick={() => onRefresh(bookmark)}
-                        aria-label="Refresh metadata"
-                        visibleFrom="xs"
-                      >
-                        <FaSyncAlt size={12} />
-                      </ActionIcon>
-                    </Tooltip>
                     <Menu position="bottom-end" withinPortal>
                       <Menu.Target>
                         <ActionIcon
@@ -151,13 +134,6 @@ export default function BookmarkTable({
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>
-                        <Menu.Item
-                          hiddenFrom="xs"
-                          leftSection={<FaSyncAlt size={12} />}
-                          onClick={() => onRefresh(bookmark)}
-                        >
-                          Refresh title & favicon
-                        </Menu.Item>
                         <Menu.Item
                           leftSection={<FaPen size={12} />}
                           onClick={() => onEdit(bookmark)}

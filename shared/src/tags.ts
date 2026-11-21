@@ -18,28 +18,3 @@ export function normalizeTags(raw: readonly string[]): string[] {
   }
   return out;
 }
-
-const DOMAIN_TAGS: [RegExp, string[]][] = [
-  [/(^|\.)(youtube\.com|youtu\.be)$/, ['youtube', 'video']],
-  [/(^|\.)vimeo\.com$/, ['video']],
-  [/(^|\.)substack\.com$/, ['essay']],
-  [/(^|\.)medium\.com$/, ['article']],
-  [/(^|\.)github\.com$/, ['github']],
-  [/(^|\.)reddit\.com$/, ['reddit']],
-  [/(^|\.)(twitter\.com|x\.com)$/, ['twitter']],
-  [/(^|\.)wikipedia\.org$/, ['wikipedia']],
-  [/(^|\.)(spotify\.com|soundcloud\.com|bandcamp\.com)$/, ['music']],
-  [/(^|\.)arxiv\.org$/, ['paper']],
-  [/(^|\.)podcasts\.apple\.com$/, ['podcast']],
-];
-
-/** Tags to pre-fill in the add form, based on the link's domain. */
-export function suggestTagsForUrl(url: string): string[] {
-  let host: string;
-  try {
-    host = new URL(url).hostname.toLowerCase();
-  } catch {
-    return [];
-  }
-  return DOMAIN_TAGS.find(([pattern]) => pattern.test(host))?.[1] ?? [];
-}

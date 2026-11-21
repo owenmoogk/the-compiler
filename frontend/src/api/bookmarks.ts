@@ -47,16 +47,6 @@ export async function deleteBookmark(id: string): Promise<FileResponse> {
   return api(`/api/bookmarks/${id}`, { method: 'DELETE' });
 }
 
-export async function refreshBookmark(id: string): Promise<BookmarkResponse> {
-  return api(`/api/bookmarks/${id}/refresh`, { method: 'POST' });
-}
-
-export async function refreshAllBookmarks(): Promise<
-  FileResponse & { refreshed: number }
-> {
-  return api('/api/bookmarks/refresh', { method: 'POST', body: {} });
-}
-
 export async function renameTag(
   from: string,
   to: string

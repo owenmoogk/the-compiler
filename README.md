@@ -4,7 +4,7 @@ Useful links and resources, live at **https://owenmoogk.com/the-compiler/**.
 
 Anyone can browse, search and filter by tag. Signing in with GitHub (with push access to
 [owenmoogk/bookmarks](https://github.com/owenmoogk/bookmarks)) turns on editing: add links,
-edit, delete, rename tags, and refresh each link's title/favicon.
+edit, delete and rename tags. Each link's title and favicon are fetched when it's added.
 
 MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the original version.
 

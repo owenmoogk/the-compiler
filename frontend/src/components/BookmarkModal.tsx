@@ -1,10 +1,5 @@
 import type { Bookmark, BookmarkMeta, BookmarksFile } from '@compiler/shared';
-import {
-  hostnameOf,
-  normalizeTags,
-  sameUrl,
-  suggestTagsForUrl,
-} from '@compiler/shared';
+import { hostnameOf, sameUrl } from '@compiler/shared';
 import {
   Button,
   Group,
@@ -13,7 +8,6 @@ import {
   Modal,
   Paper,
   Stack,
-  TagsInput,
   Text,
   Textarea,
   TextInput,
@@ -21,7 +15,7 @@ import {
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   createBookmark,
@@ -31,6 +25,7 @@ import {
 import { errorMessage } from '@api/client';
 
 import Favicon from './Favicon';
+import TagPicker from './TagPicker';
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -133,8 +128,6 @@ function BookmarkForm({
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<Preview>();
   const [debouncedUrl] = useDebouncedValue(form.values.url.trim(), 500);
-  // Domain tag suggestions fill the tag box until you edit it yourself.
-  const tagsTouched = useRef(Boolean(bookmark));
 
   useEffect(() => {
     if (!isHttpUrl(debouncedUrl)) {
@@ -198,8 +191,6 @@ function BookmarkForm({
     }
   };
 
-  const urlProps = form.getInputProps('url');
-
   return (
     <form onSubmit={form.onSubmit((values) => void save(values))}>
       <Stack gap="sm">
@@ -207,42 +198,26 @@ function BookmarkForm({
           label="URL"
           placeholder="https://…"
           data-autofocus
-          {...urlProps}
-          onChange={(event) => {
-            const value = event.currentTarget.value;
-            form.setFieldValue('url', value);
-            if (!tagsTouched.current) {
-              form.setFieldValue('tags', suggestTagsForUrl(value.trim()));
-            }
-          }}
+          {...form.getInputProps('url')}
         />
         <PreviewCard preview={preview} />
         <TextInput
           label="Title"
-          description="Leave empty to use the page's own title"
           placeholder={preview?.meta?.title ?? bookmark?.meta?.title ?? ''}
           {...form.getInputProps('title')}
         />
         <Textarea
           label="Notes"
-          description="Optional"
           placeholder="Your notes about this link"
           autosize
           minRows={2}
           maxRows={6}
           {...form.getInputProps('notes')}
         />
-        <TagsInput
-          label="Tags"
-          description="Press Enter or comma to add. Tags become lowercase-kebab."
-          data={allTags}
-          splitChars={[',']}
-          clearable
+        <TagPicker
+          allTags={allTags}
           value={form.values.tags}
-          onChange={(tags) => {
-            tagsTouched.current = true;
-            form.setFieldValue('tags', normalizeTags(tags));
-          }}
+          onChange={(tags) => form.setFieldValue('tags', tags)}
         />
         <Group justify="end" mt="xs">
           <Button variant="default" onClick={onCancel}>

@@ -66,9 +66,6 @@ export default function RenameTagModal({
           data={tagCounts.map((t) => t.tag).filter((t) => t !== from)}
           value={to}
           onChange={setTo}
-          description={
-            target && target !== to ? `Saved as "${target}"` : undefined
-          }
         />
         {merging && (
           <Text size="sm" c="orange">

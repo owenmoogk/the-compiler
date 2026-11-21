@@ -2,7 +2,7 @@ import type { TagCount } from '@compiler/shared';
 import { ActionIcon, Badge, Group, Text, Tooltip } from '@mantine/core';
 import { FaPen } from 'react-icons/fa';
 
-import type { useViewParams } from '@global/useViewParams';
+import type { useView } from '@global/useView';
 
 /** Tag pills, most-used first. Click to filter; links with any selected tag are shown. */
 export default function TagCloud({
@@ -11,7 +11,7 @@ export default function TagCloud({
   canEdit,
   onRename,
 }: {
-  viewParams: ReturnType<typeof useViewParams>;
+  viewParams: ReturnType<typeof useView>;
   tagCounts: TagCount[];
   canEdit: boolean;
   onRename: () => void;

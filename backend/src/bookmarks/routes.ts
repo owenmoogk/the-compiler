@@ -4,7 +4,6 @@ import {
   bookmarkPatchSchema,
   displayTitle,
   metadataRequestSchema,
-  refreshManySchema,
   renameTagIn,
   renameTagSchema,
   sameUrl,
@@ -15,7 +14,7 @@ import { nanoid } from 'nanoid';
 
 import type { SessionTools } from '../auth/middleware';
 import { currentSession, mustSession } from '../auth/middleware';
-import { HttpError, mapLimit } from '../http';
+import { HttpError } from '../http';
 import type { BookmarkStore, Mutate } from './store';
 
 type Scrape = (url: string) => Promise<BookmarkMeta>;
@@ -39,18 +38,6 @@ function assertNoDuplicate(
   }
 }
 
-/**
- * A refresh that fails (rate limit, site down) must not wipe metadata that was
- * fetched fine before: keep the old fields and just record the error.
- */
-function refreshedMeta(
-  old: BookmarkMeta | undefined,
-  fresh: BookmarkMeta
-): BookmarkMeta {
-  if (fresh.title || !old?.title) return fresh;
-  return { ...old, error: fresh.error };
-}
-
 export function bookmarksRouter(deps: {
   store: BookmarkStore;
   mutate: Mutate;
@@ -59,6 +46,37 @@ export function bookmarksRouter(deps: {
 }): Router {
   const { store, mutate, scrape, tools } = deps;
   const router = Router();
+
+  /**
+   * Fetches a link's title/favicon after the request has returned, then saves
+   * them as a second commit. Skipped if the link was deleted or its URL edited
+   * in the meantime.
+   */
+  const fetchInfoLater = (token: string, id: string, url: string) => {
+    void (async () => {
+      try {
+        const meta = await scrape(url);
+        await mutate(token, (current) => {
+          const index = findIndex(current.bookmarks, id);
+          const bookmark = current.bookmarks[index];
+          if (bookmark.url !== url) {
+            throw new HttpError(409, 'URL changed while fetching');
+          }
+          const next = { ...bookmark, meta };
+          current.bookmarks[index] = next;
+          return {
+            file: current,
+            message: `Fetch info: ${displayTitle(next)}`,
+            result: null,
+          };
+        });
+      } catch (error) {
+        if (!(error instanceof HttpError)) {
+          console.warn(`Background fetch failed for ${url}:`, error);
+        }
+      }
+    })();
+  };
 
   router.get('/bookmarks', tools.optional, async (_req, res) => {
     const token = currentSession(res)?.accessToken;
@@ -76,10 +94,8 @@ export function bookmarksRouter(deps: {
     const session = mustSession(res);
     const input = bookmarkCreateSchema.parse(req.body);
 
-    const before = await store.read(session.accessToken);
-    assertNoDuplicate(before.file.bookmarks, input.url);
-    const meta = input.meta ?? (await scrape(input.url));
-
+    // Saved right away; if the dialog's preview hadn't finished, the title and
+    // favicon are fetched in the background.
     const { file, result } = await mutate(session.accessToken, (current) => {
       assertNoDuplicate(current.bookmarks, input.url);
       const bookmark: Bookmark = {
@@ -89,7 +105,7 @@ export function bookmarksRouter(deps: {
         notes: input.notes,
         tags: input.tags,
         addedAt: new Date().toISOString(),
-        meta,
+        meta: input.meta,
       };
       current.bookmarks.push(bookmark);
       return {
@@ -98,6 +114,9 @@ export function bookmarksRouter(deps: {
         result: bookmark,
       };
     });
+    if (!result.meta) {
+      fetchInfoLater(session.accessToken, result.id, result.url);
+    }
     res.status(201).json({ file, bookmark: result });
   });
 
@@ -106,37 +125,32 @@ export function bookmarksRouter(deps: {
     const id = req.params.id as string;
     const patch = bookmarkPatchSchema.parse(req.body);
 
-    // A new URL means new metadata; scrape before taking the write lock.
-    let meta: BookmarkMeta | undefined;
-    if (patch.url) {
-      const { file } = await store.read(session.accessToken);
-      const existing = file.bookmarks[findIndex(file.bookmarks, id)];
-      if (!sameUrl(existing.url, patch.url)) {
-        assertNoDuplicate(file.bookmarks, patch.url, id);
-        meta = await scrape(patch.url);
-      }
-    }
-
     const { file, result } = await mutate(session.accessToken, (current) => {
       const index = findIndex(current.bookmarks, id);
       const old = current.bookmarks[index];
       if (patch.url) assertNoDuplicate(current.bookmarks, patch.url, id);
+      // A new URL drops the old title/favicon; new ones are fetched below.
+      const urlChanged =
+        patch.url !== undefined && !sameUrl(patch.url, old.url);
       const next: Bookmark = {
         ...old,
         url: patch.url ?? old.url,
         tags: patch.tags ?? old.tags,
         title: patch.title === null ? undefined : (patch.title ?? old.title),
         notes: patch.notes === null ? undefined : (patch.notes ?? old.notes),
-        meta: meta ?? old.meta,
+        meta: urlChanged ? undefined : old.meta,
       };
       current.bookmarks[index] = next;
       return {
         file: current,
         message: `Edit: ${displayTitle(next)}`,
-        result: next,
+        result: { bookmark: next, urlChanged },
       };
     });
-    res.json({ file, bookmark: result });
+    if (result.urlChanged) {
+      fetchInfoLater(session.accessToken, id, result.bookmark.url);
+    }
+    res.json({ file, bookmark: result.bookmark });
   });
 
   router.delete('/bookmarks/:id', tools.required, async (req, res) => {
@@ -152,54 +166,6 @@ export function bookmarksRouter(deps: {
       };
     });
     res.json({ file });
-  });
-
-  router.post('/bookmarks/:id/refresh', tools.required, async (req, res) => {
-    const session = mustSession(res);
-    const id = req.params.id as string;
-    const before = await store.read(session.accessToken);
-    const target = before.file.bookmarks[findIndex(before.file.bookmarks, id)];
-    const meta = await scrape(target.url);
-
-    const { file, result } = await mutate(session.accessToken, (current) => {
-      const index = findIndex(current.bookmarks, id);
-      const old = current.bookmarks[index];
-      const next = { ...old, meta: refreshedMeta(old.meta, meta) };
-      current.bookmarks[index] = next;
-      return {
-        file: current,
-        message: `Refresh: ${displayTitle(next)}`,
-        result: next,
-      };
-    });
-    res.json({ file, bookmark: result });
-  });
-
-  /** Re-scrapes many (default: all) bookmarks, saved as one commit. */
-  router.post('/bookmarks/refresh', tools.required, async (req, res) => {
-    const session = mustSession(res);
-    const { ids } = refreshManySchema.parse(req.body ?? {});
-    const before = await store.read(session.accessToken);
-    const targets = before.file.bookmarks.filter(
-      (b) => !ids || ids.includes(b.id)
-    );
-    const metas = new Map<string, BookmarkMeta>();
-    await mapLimit(targets, 4, async (b) => {
-      metas.set(b.id, await scrape(b.url));
-    });
-
-    const { file } = await mutate(session.accessToken, (current) => {
-      current.bookmarks = current.bookmarks.map((b) => {
-        const meta = metas.get(b.id);
-        return meta ? { ...b, meta: refreshedMeta(b.meta, meta) } : b;
-      });
-      return {
-        file: current,
-        message: `Refresh metadata for ${metas.size} bookmarks`,
-        result: null,
-      };
-    });
-    res.json({ file, refreshed: metas.size });
   });
 
   /** Renames a tag everywhere; renaming onto an existing tag merges them. */

@@ -14,23 +14,25 @@ export function useBookmarks() {
   const signedIn = session.status === 'signedIn';
   const ready = session.status !== 'loading';
 
-  const load = useCallback(async () => {
+  /** Loads the list; resolves to it (or undefined on failure). */
+  const load = useCallback(async (): Promise<BookmarksFile | undefined> => {
     const loaded = (next: BookmarksFile) => {
       setFile(next);
       setError(undefined);
+      return next;
     };
     try {
       if (signedIn) {
         try {
-          loaded(await fetchBookmarks());
-          return;
+          return loaded(await fetchBookmarks());
         } catch (err) {
           console.warn('Backend read failed, using public copy', err);
         }
       }
-      loaded(await fetchPublicBookmarks());
+      return loaded(await fetchPublicBookmarks());
     } catch (err) {
       setError(errorMessage(err));
+      return undefined;
     }
   }, [signedIn]);
 

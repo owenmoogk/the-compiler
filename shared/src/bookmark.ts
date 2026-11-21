@@ -18,7 +18,7 @@ const optionalText = (max: number) =>
     .optional()
     .transform((value) => (value ? value : undefined));
 
-/** Everything here is written by the metadata scraper; Refresh replaces the whole block. */
+/** Everything here is written by the metadata scraper when a link is added or its URL changes. */
 export const metaSchema = z.object({
   title: z.string().max(500).optional(),
   description: z.string().max(2000).optional(),
@@ -76,10 +76,6 @@ export const metadataRequestSchema = z.object({ url: httpUrl });
 
 export const renameTagSchema = z.object({
   to: z.string().max(60).transform(normalizeTag).pipe(tagSchema),
-});
-
-export const refreshManySchema = z.object({
-  ids: z.array(z.string()).max(1000).optional(),
 });
 
 export type BookmarkMeta = z.infer<typeof metaSchema>;

@@ -10,15 +10,11 @@ import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { useMemo, useState } from 'react';
 
-import {
-  deleteBookmark,
-  refreshAllBookmarks,
-  refreshBookmark,
-} from '@api/bookmarks';
+import { deleteBookmark } from '@api/bookmarks';
 import { errorMessage } from '@api/client';
 import { useSession } from '@global/session';
 import { useBookmarks } from '@global/useBookmarks';
-import { useViewParams } from '@global/useViewParams';
+import { useView } from '@global/useView';
 
 import BookmarkModal from './BookmarkModal';
 import BookmarkTable from './BookmarkTable';
@@ -36,13 +32,11 @@ const fail = (error: unknown) =>
 export default function BookmarksPage() {
   const { canEdit } = useSession();
   const { file, setFile, error, reload } = useBookmarks();
-  const viewParams = useViewParams();
+  const viewParams = useView();
   const { view, toggleTag } = viewParams;
 
   const [editing, setEditing] = useState<{ bookmark?: Bookmark } | null>(null);
   const [renaming, setRenaming] = useState(false);
-  const [refreshing, setRefreshing] = useState<ReadonlySet<string>>(new Set());
-  const [refreshingAll, setRefreshingAll] = useState(false);
 
   const bookmarks = useMemo(() => file?.bookmarks ?? [], [file]);
   const tagCounts = useMemo(() => countTags(bookmarks), [bookmarks]);
@@ -51,52 +45,25 @@ export default function BookmarksPage() {
     [bookmarks, view]
   );
 
+  // A link saved before its title/favicon were fetched gets them from the
+  // server in the background; re-read the list until they show up.
+  const waitForInfo = (id: string, attempt = 1) => {
+    window.setTimeout(() => {
+      void reload().then((next) => {
+        const saved = next?.bookmarks.find((b) => b.id === id);
+        if (saved && !saved.meta && attempt < 6) waitForInfo(id, attempt + 1);
+      });
+    }, 4000);
+  };
+
   const onSaved = (next: BookmarksFile, saved: Bookmark) => {
     setFile(next);
     setEditing(null);
+    if (!saved.meta) waitForInfo(saved.id);
     notifications.show({
       color: 'green',
       message: `Saved "${displayTitle(saved)}"`,
     });
-  };
-
-  const refreshOne = async (bookmark: Bookmark) => {
-    setRefreshing((current) => new Set(current).add(bookmark.id));
-    try {
-      const result = await refreshBookmark(bookmark.id);
-      setFile(result.file);
-      const { meta } = result.bookmark;
-      notifications.show({
-        color: meta?.error ? 'orange' : 'green',
-        message: meta?.error
-          ? `Partly refreshed: ${meta.error}`
-          : `Refreshed "${displayTitle(result.bookmark)}"`,
-      });
-    } catch (err) {
-      fail(err);
-    } finally {
-      setRefreshing((current) => {
-        const next = new Set(current);
-        next.delete(bookmark.id);
-        return next;
-      });
-    }
-  };
-
-  const refreshAll = async () => {
-    setRefreshingAll(true);
-    try {
-      const result = await refreshAllBookmarks();
-      setFile(result.file);
-      notifications.show({
-        color: 'green',
-        message: `Refreshed ${result.refreshed} links`,
-      });
-    } catch (err) {
-      fail(err);
-    } finally {
-      setRefreshingAll(false);
-    }
   };
 
   const confirmDelete = (bookmark: Bookmark) =>
@@ -122,22 +89,11 @@ export default function BookmarksPage() {
         The Compiler
       </Title>
 
-      <Stack gap={6}>
-        <Toolbar
-          viewParams={viewParams}
-          canEdit={canEdit}
-          refreshingAll={refreshingAll}
-          onAdd={() => setEditing({})}
-          onRefreshAll={() => void refreshAll()}
-        />
-        {file && (
-          <Text size="sm" c="dimmed">
-            {visible.length === bookmarks.length
-              ? `${bookmarks.length} links`
-              : `${visible.length} of ${bookmarks.length} links`}
-          </Text>
-        )}
-      </Stack>
+      <Toolbar
+        viewParams={viewParams}
+        canEdit={canEdit}
+        onAdd={() => setEditing({})}
+      />
       <TagCloud
         viewParams={viewParams}
         tagCounts={tagCounts}
@@ -164,10 +120,8 @@ export default function BookmarksPage() {
         <BookmarkTable
           bookmarks={visible}
           canEdit={canEdit}
-          refreshing={refreshing}
           onTagClick={toggleTag}
           onEdit={(bookmark) => setEditing({ bookmark })}
-          onRefresh={(bookmark) => void refreshOne(bookmark)}
           onDelete={confirmDelete}
         />
       ) : (

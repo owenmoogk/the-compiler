@@ -1,15 +1,8 @@
 import type { SortOption } from '@compiler/shared';
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Menu,
-  Select,
-  TextInput,
-} from '@mantine/core';
-import { FaEllipsisV, FaPlus, FaSearch, FaSyncAlt } from 'react-icons/fa';
+import { Button, Group, Select, TextInput } from '@mantine/core';
+import { FaPlus, FaSearch } from 'react-icons/fa';
 
-import type { useViewParams } from '@global/useViewParams';
+import type { useView } from '@global/useView';
 
 const SORT_LABELS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
@@ -21,15 +14,11 @@ const SORT_LABELS: { value: SortOption; label: string }[] = [
 export default function Toolbar({
   viewParams,
   canEdit,
-  refreshingAll,
   onAdd,
-  onRefreshAll,
 }: {
-  viewParams: ReturnType<typeof useViewParams>;
+  viewParams: ReturnType<typeof useView>;
   canEdit: boolean;
-  refreshingAll: boolean;
   onAdd: () => void;
-  onRefreshAll: () => void;
 }) {
   const { view, update } = viewParams;
 
@@ -52,31 +41,9 @@ export default function Toolbar({
         aria-label="Sort"
       />
       {canEdit && (
-        <Group gap="2xs" wrap="nowrap">
-          <Button leftSection={<FaPlus size={12} />} onClick={onAdd}>
-            Add link
-          </Button>
-          <Menu position="bottom-end" withinPortal>
-            <Menu.Target>
-              <ActionIcon
-                variant="default"
-                size="lg"
-                loading={refreshingAll}
-                aria-label="More actions"
-              >
-                <FaEllipsisV size={12} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                leftSection={<FaSyncAlt size={12} />}
-                onClick={onRefreshAll}
-              >
-                Refresh all metadata
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Group>
+        <Button leftSection={<FaPlus size={12} />} onClick={onAdd}>
+          Add link
+        </Button>
       )}
     </Group>
   );
