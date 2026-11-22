@@ -17,7 +17,6 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "yarn workspace @compiler/shared typecheck && yarn workspace @compiler/backend typecheck && yarn workspace @compiler/frontend typecheck",
     "test": "yarn lint && yarn typecheck",
-    "migrate": "yarn workspace @compiler/backend migrate",
     "ver:major": "git pull && yarn version --major && git push && git push --tags",
     "ver:minor": "git pull && yarn version --minor && git push && git push --tags",
     "ver:patch": "git pull && yarn version --patch && git push && git push --tags"
