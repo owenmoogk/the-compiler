@@ -100,8 +100,9 @@ The backend runs in Docker from `~/the-compiler`:
 ```
 Settings that aren't secret (URLs, editor id, GitHub App client ID) are in
 `backend/deploy/compose.yaml`. `data/` is backed up nightly to the NAS (see the homelab repo).
-To restore, stop the container, untar the newest backup's `the-compiler/` folder from the NAS
-over `data/`, and start it again.
+To restore, stop the container (`docker compose down`), untar the newest
+`/mnt/nas/minecraft/server-state/the-compiler/the-compiler_*.tar.gz` into `data/`
+(`tar -xzf <archive> -C ~/the-compiler/data`), and start it again (`docker compose up -d`).
 ```sh
 mkdir -p ~/the-compiler/data && cd ~/the-compiler
 cp <repo>/backend/deploy/deploy.sh . && chmod +x deploy.sh
