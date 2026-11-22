@@ -20,7 +20,7 @@ browser ──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
    └─ if the server is down ─▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
 ```
 
-- **Data** lives on the server (`~/.local/share/the-compiler/bookmarks.json`) and is pushed
+- **Data** lives on the server (`~/the-compiler/data/bookmarks.json`) and is pushed
   to the public repo `owenmoogk/bookmarks` once a day at `SYNC_HOUR` (default 3am), as one
   commit listing that day's changes. On first start the server copies the file from GitHub.
   The server's copy wins: edits made directly on GitHub are overwritten by the next push.
@@ -71,9 +71,12 @@ This bumps the root version and pushes a `vX.Y.Z` tag. CI then:
 1. lints, typechecks and builds;
 2. creates a GitHub Release with `backend-dist` and `frontend-dist` zips;
 3. deploys `frontend/dist` to GitHub Pages;
-4. SSHes to the server through the Cloudflare Tunnel and pipes the backend zip into
-   `backend/deploy/compiler-deploy.sh`. That script swaps the release in, restarts the
-   service, checks `/healthz`, and rolls back if the check fails.
+4. builds the backend Docker image (`Dockerfile`) and pushes it to
+   `ghcr.io/owenmoogk/the-compiler:vX.Y.Z` (and `:latest`);
+5. SSHes to the server through the Cloudflare Tunnel and pipes `backend/deploy/compose.yaml`
+   into `~/the-compiler/deploy.sh` (`backend/deploy/deploy.sh`). That script installs it,
+   sets the image tag, pulls the image, restarts the container, checks `/healthz`,
+   and rolls back to the previous tag if the check fails.
 
 ## One-time setup
 
@@ -92,18 +95,28 @@ GitHub → Settings → Developer settings → GitHub Apps → New:
 Then generate a client secret, and **install the app on `owenmoogk/bookmarks` only**.
 
 ### 3. Server (same box and pattern as learn-mcp)
-```sh
-mkdir -p ~/.config/the-compiler
-cp backend/deploy/env.example ~/.config/the-compiler/env   # fill in, then chmod 600
-sudo cp backend/deploy/compiler.service /etc/systemd/system/   # replace USER, HOME, NODE
-sudo install -m 0440 backend/deploy/compiler-sudoers /etc/sudoers.d/compiler   # replace USER
-cp backend/deploy/compiler-deploy.sh ~/bin/ && chmod +x ~/bin/compiler-deploy.sh
-sudo systemctl daemon-reload && sudo systemctl enable compiler
+The backend runs in Docker from `~/the-compiler`:
 ```
+~/the-compiler/
+  compose.yaml   installed by each deploy (from backend/deploy/compose.yaml)
+  .env           TAG=vX.Y.Z, APP_UID=, APP_GID= (the user that owns data/)
+  secrets.env    from backend/deploy/env.example, filled in, chmod 600
+  deploy.sh      copy of backend/deploy/deploy.sh (the deploy key's forced command)
+  data/          bookmarks.json, sync-state.json, sessions.enc
+```
+```sh
+mkdir -p ~/the-compiler/data && cd ~/the-compiler
+cp <repo>/backend/deploy/env.example secrets.env && chmod 600 secrets.env   # fill in
+cp <repo>/backend/deploy/deploy.sh . && chmod +x deploy.sh
+printf 'TAG=\nAPP_UID=%s\nAPP_GID=%s\n' "$(id -u)" "$(id -g)" > .env
+```
+The deploy user must be in the `docker` group. The container shares the host network and
+listens on `127.0.0.1:8788`. Logs: `docker compose logs -f` in `~/the-compiler`.
+
 Add a **new** deploy key to `~/.ssh/authorized_keys`. A forced command is set per key,
 so it can't share learn-mcp's key:
 ```
-command="/home/USER/bin/compiler-deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty ssh-ed25519 AAAA... the-compiler-deploy
+command="/home/USER/the-compiler/deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty ssh-ed25519 AAAA... the-compiler-deploy
 ```
 
 ### 4. Cloudflare

@@ -1,0 +1,38 @@
+# Runs on the server from ~/the-compiler. CI sends this file with each deploy
+# (see backend/deploy/deploy.sh); TAG, APP_UID and APP_GID come from ~/the-compiler/.env.
+name: the-compiler
+
+services:
+  backend:
+    image: ghcr.io/owenmoogk/the-compiler:${TAG:?set TAG in .env}
+    restart: unless-stopped
+    init: true
+    # Listens on 127.0.0.1:8788 on the host's network, where cloudflared reaches it.
+    network_mode: host
+    # Run as the owner of ./data so files it writes stay editable on the host.
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    # Secrets (GitHub App, SESSION_KEY, ...): see env.example. chmod 600, never committed.
+    env_file: ./secrets.env
+    environment:
+      PORT: "8788"
+      HOST: 127.0.0.1
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # Stay out of the way of anything else on the box (e.g. a game server).
+    cpus: 0.5
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8788/healthz').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
