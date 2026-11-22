@@ -21,15 +21,9 @@ const envSchema = z
       }),
     GITHUB_APP_CLIENT_ID: z.string().default(''),
     GITHUB_APP_CLIENT_SECRET: z.string().default(''),
-    BOOKMARKS_REPO: z
-      .string()
-      .regex(/^[\w.-]+\/[\w.-]+$/)
-      .default('owenmoogk/bookmarks'),
-    BOOKMARKS_BRANCH: z.string().default('main'),
-    BOOKMARKS_PATH: z.string().default('bookmarks.json'),
+    /** The only GitHub account allowed to edit (numeric id, so renames don't matter). */
+    EDITOR_GITHUB_ID: z.coerce.number().int().positive().default(58040528),
     DATA_DIR: z.string().default(join(homedir(), '.local/share/the-compiler')),
-    LOCAL_BOOKMARKS_FILE: z.string().optional(),
-    SYNC_HOUR: z.coerce.number().int().min(0).max(23).default(3),
     DEV_LOGIN: z
       .enum(['true', 'false'])
       .default('false')
@@ -37,13 +31,13 @@ const envSchema = z
   })
   .superRefine((env, ctx) => {
     if (
-      !env.LOCAL_BOOKMARKS_FILE &&
+      !env.DEV_LOGIN &&
       !(env.GITHUB_APP_CLIENT_ID && env.GITHUB_APP_CLIENT_SECRET)
     ) {
       ctx.addIssue({
         code: 'custom',
         message:
-          'GITHUB_APP_CLIENT_ID and GITHUB_APP_CLIENT_SECRET are required unless LOCAL_BOOKMARKS_FILE is set',
+          'GITHUB_APP_CLIENT_ID and GITHUB_APP_CLIENT_SECRET are required unless DEV_LOGIN is on',
       });
     }
     const host = new URL(env.PUBLIC_URL).hostname;
@@ -64,14 +58,10 @@ export type Config = {
   secureCookies: boolean;
   sessionKey: Buffer;
   github: { clientId: string; clientSecret: string };
-  repo: { fullName: string; branch: string; path: string };
+  editorGithubId: number;
   dataDir: string;
-  /** The source-of-truth bookmarks file on this server. */
+  /** The bookmarks file on this server: the only copy (backed up to the NAS). */
   bookmarksFile: string;
-  /** Push to the GitHub repo (false in local dev, which only reads it once). */
-  syncToGithub: boolean;
-  /** Local hour of day for the daily push. */
-  syncHour: number;
   devLogin: boolean;
 };
 
@@ -96,17 +86,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       clientId: e.GITHUB_APP_CLIENT_ID,
       clientSecret: e.GITHUB_APP_CLIENT_SECRET,
     },
-    repo: {
-      fullName: e.BOOKMARKS_REPO,
-      branch: e.BOOKMARKS_BRANCH,
-      path: e.BOOKMARKS_PATH,
-    },
+    editorGithubId: e.EDITOR_GITHUB_ID,
     dataDir: resolve(e.DATA_DIR),
-    bookmarksFile: resolve(
-      e.LOCAL_BOOKMARKS_FILE ?? join(e.DATA_DIR, 'bookmarks.json')
-    ),
-    syncToGithub: !e.LOCAL_BOOKMARKS_FILE,
-    syncHour: e.SYNC_HOUR,
+    bookmarksFile: resolve(e.DATA_DIR, 'bookmarks.json'),
     devLogin: e.DEV_LOGIN,
   };
 }

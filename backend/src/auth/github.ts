@@ -161,21 +161,3 @@ export async function fetchUser(token: string) {
   const res = await githubApi(token, '/user');
   return userSchema.parse(await res.json());
 }
-
-/**
- * Whether this user can push to the bookmarks repo. GitHub enforces this on
- * every write anyway; this only decides whether the UI shows edit controls.
- */
-export async function fetchCanEdit(
-  token: string,
-  repo: string
-): Promise<boolean> {
-  try {
-    const res = await githubApi(token, `/repos/${repo}`);
-    const body = (await res.json()) as { permissions?: { push?: boolean } };
-    return body.permissions?.push === true;
-  } catch (error) {
-    if (error instanceof GithubError && error.status !== 401) return false;
-    throw error;
-  }
-}

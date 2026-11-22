@@ -22,10 +22,10 @@ services:
       PUBLIC_URL: https://compiler.owenmoogk.com
       FRONTEND_URL: https://owenmoogk.com/the-compiler/
       GITHUB_APP_CLIENT_ID: Iv23liA6jgAzKqvyRi6o
-      BOOKMARKS_REPO: owenmoogk/bookmarks
-      BOOKMARKS_BRANCH: main
-      BOOKMARKS_PATH: bookmarks.json
-      # State the server writes: bookmarks.json, sync-state.json, sessions.enc.
+      # GitHub user id of owenmoogk, the only account that can edit.
+      EDITOR_GITHUB_ID: "58040528"
+      # State the server writes: bookmarks.json (the only copy) and sessions.enc.
+      # Backed up nightly to the NAS by the homelab repo's backup script.
       DATA_DIR: /data
     volumes:
       - ./data:/data

@@ -5,6 +5,17 @@ import { HttpError, parseCookies } from '../http';
 import { refreshTokens } from './github';
 import type { Session, SessionStore } from './sessions';
 
+/** Access token of DEV_LOGIN sessions (no GitHub involved). */
+export const LOCAL_TOKEN = 'local-dev-token';
+
+/** Only the configured GitHub account (or the local dev login) can edit. */
+export function canEdit(config: Config, session: Session): boolean {
+  return (
+    session.githubId === config.editorGithubId ||
+    (config.devLogin && session.accessToken === LOCAL_TOKEN)
+  );
+}
+
 export function sessionCookieName(config: Config): string {
   // __Host- pins the cookie to this exact host over HTTPS.
   return config.secureCookies ? '__Host-sid' : 'sid';
@@ -133,10 +144,7 @@ export function createSessionTools(config: Config, sessions: SessionStore) {
     next();
   };
 
-  /**
-   * Signed in and allowed to push to the bookmarks repo. Edits go to the
-   * server's copy now, so this is what stops other GitHub users editing.
-   */
+  /** Signed in as the editor account (see canEdit). */
   const editor: RequestHandler = async (req, res, next) => {
     const session = await load(req);
     if (!session) {
@@ -144,7 +152,7 @@ export function createSessionTools(config: Config, sessions: SessionStore) {
       next(new HttpError(401, 'Sign in first'));
       return;
     }
-    if (!session.canEdit) {
+    if (!canEdit(config, session)) {
       next(new HttpError(403, "You don't have edit access"));
       return;
     }

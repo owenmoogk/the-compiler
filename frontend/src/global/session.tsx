@@ -15,7 +15,7 @@ type SessionState = { status: 'loading' } | MeResult;
 
 type SessionContextValue = {
   session: SessionState;
-  /** Signed in with push access to the bookmarks repo. */
+  /** Signed in as the editor account. */
   canEdit: boolean;
   me?: Me;
   logout: () => Promise<void>;

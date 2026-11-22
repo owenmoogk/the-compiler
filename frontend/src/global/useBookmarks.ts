@@ -1,7 +1,7 @@
 import type { BookmarksFile } from '@compiler/shared';
 import { useCallback, useEffect, useState } from 'react';
 
-import { fetchBookmarks, fetchPublicBookmarks } from '@api/bookmarks';
+import { fetchBookmarks } from '@api/bookmarks';
 import { errorMessage } from '@api/client';
 
 import { useSession } from './session';
@@ -15,18 +15,11 @@ export function useBookmarks() {
 
   /** Loads the list; resolves to it (or undefined on failure). */
   const load = useCallback(async (): Promise<BookmarksFile | undefined> => {
-    const loaded = (next: BookmarksFile) => {
+    try {
+      const next = await fetchBookmarks();
       setFile(next);
       setError(undefined);
       return next;
-    };
-    try {
-      try {
-        return loaded(await fetchBookmarks());
-      } catch (err) {
-        console.warn('Backend read failed, using the GitHub copy', err);
-      }
-      return loaded(await fetchPublicBookmarks());
     } catch (err) {
       setError(errorMessage(err));
       return undefined;

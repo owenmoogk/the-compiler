@@ -4,22 +4,14 @@ import { randomBytes } from 'node:crypto';
 
 import type { Config } from '../config';
 import { HttpError, parseCookies } from '../http';
-import {
-  authorizeUrl,
-  exchangeCode,
-  fetchCanEdit,
-  fetchUser,
-  revokeToken,
-} from './github';
+import { authorizeUrl, exchangeCode, fetchUser, revokeToken } from './github';
 import type { SessionTools } from './middleware';
-import { mustSession } from './middleware';
+import { LOCAL_TOKEN, canEdit, mustSession } from './middleware';
 import type { Session, SessionStore } from './sessions';
 import { sessionExpiresAt } from './sessions';
 
 const STATE_COOKIE = 'oauth_state';
 const STATE_TTL = 10 * 60 * 1000;
-const CAN_EDIT_TTL = 10 * 60 * 1000;
-export const LOCAL_TOKEN = 'local-dev-token';
 
 export function authRouter(
   config: Config,
@@ -38,7 +30,7 @@ export function authRouter(
     login: session.login,
     name: session.name,
     avatarUrl: session.avatarUrl,
-    canEdit: session.canEdit,
+    canEdit: canEdit(config, session),
   });
 
   router.get('/login', (req, res) => {
@@ -50,8 +42,6 @@ export function authRouter(
         name: 'Local dev',
         avatarUrl: '',
         accessToken: LOCAL_TOKEN,
-        canEdit: true,
-        canEditCheckedAt: Date.now(),
       });
       tools.setCookie(res, session, sessionExpiresAt(session) - Date.now());
       res.redirect(returnTo);
@@ -95,46 +85,27 @@ export function authRouter(
 
     const tokens = await exchangeCode(config, code);
     const user = await fetchUser(tokens.accessToken);
-    const canEdit = await fetchCanEdit(
-      tokens.accessToken,
-      config.repo.fullName
-    );
     const session = sessions.create({
       ...tokens,
       githubId: user.id,
       login: user.login,
       name: user.name ?? undefined,
       avatarUrl: user.avatar_url,
-      canEdit,
-      canEditCheckedAt: Date.now(),
     });
     tools.setCookie(res, session, sessionExpiresAt(session) - Date.now());
-    console.log(`Signed in: ${user.login} (canEdit=${String(canEdit)})`);
+    console.log(
+      `Signed in: ${user.login} (canEdit=${String(canEdit(config, session))})`
+    );
     res.redirect(entry.returnTo);
   });
 
-  router.get('/me', tools.optional, async (_req, res) => {
+  router.get('/me', tools.optional, (_req, res) => {
     const session = res.locals.session as Session | undefined;
     if (!session) {
       res.status(401).json({ error: 'Not signed in' });
       return;
     }
-    let current = session;
-    if (
-      session.accessToken !== LOCAL_TOKEN &&
-      Date.now() - session.canEditCheckedAt > CAN_EDIT_TTL
-    ) {
-      const canEdit = await fetchCanEdit(
-        session.accessToken,
-        config.repo.fullName
-      );
-      current =
-        sessions.update(session.id, {
-          canEdit,
-          canEditCheckedAt: Date.now(),
-        }) ?? session;
-    }
-    res.json(toMe(current));
+    res.json(toMe(session));
   });
 
   router.post('/logout', tools.required, async (_req, res) => {

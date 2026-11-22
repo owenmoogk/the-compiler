@@ -10,7 +10,6 @@ import type { SessionStore } from './auth/sessions';
 import { bookmarksRouter } from './bookmarks/routes';
 import type { BookmarkStore } from './bookmarks/store';
 import { createMutator } from './bookmarks/store';
-import type { Sync } from './bookmarks/sync';
 import type { Config } from './config';
 import { APP_VERSION } from './config';
 import { errorHandler } from './http';
@@ -27,13 +26,10 @@ export function createApp(deps: {
   sessions: SessionStore;
   tools: SessionTools;
   store: BookmarkStore;
-  sync: Sync;
   scrape: (url: string) => Promise<BookmarkMeta>;
 }) {
-  const { config, sessions, tools, store, sync, scrape } = deps;
-  const mutate = createMutator(store, (message) => {
-    sync.record(message);
-  });
+  const { config, sessions, tools, store, scrape } = deps;
+  const mutate = createMutator(store);
 
   const app = express();
   app.disable('x-powered-by');
@@ -55,7 +51,7 @@ export function createApp(deps: {
     '/api/metadata',
     rateLimit({ windowMs: 60 * 1000, limit: 30, keyGenerator: clientKey })
   );
-  app.use('/api', bookmarksRouter({ store, mutate, scrape, tools, sync }));
+  app.use('/api', bookmarksRouter({ store, mutate, scrape, tools }));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' });

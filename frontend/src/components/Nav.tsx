@@ -17,7 +17,7 @@ import { Link } from 'react-router';
 
 import { loginUrl } from '@api/auth';
 import { errorMessage } from '@api/client';
-import { BOOKMARKS_REPO_URL, REPO_URL } from '@global/config';
+import { REPO_URL } from '@global/config';
 import { useSession } from '@global/session';
 
 import classes from './HeaderMenu.module.css';
@@ -58,17 +58,9 @@ function UserMenu() {
         </Menu.Label>
         {!me.canEdit && (
           <Text size="xs" c="dimmed" px="sm" pb="xs" maw={220}>
-            You can't push to the bookmarks repo, so editing is off.
+            Only the site owner can edit.
           </Text>
         )}
-        <Menu.Item
-          component="a"
-          href={BOOKMARKS_REPO_URL}
-          target="_blank"
-          leftSection={<FaGithub />}
-        >
-          Bookmark history
-        </Menu.Item>
         <Menu.Item
           leftSection={<FiLogOut />}
           onClick={() =>

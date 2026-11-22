@@ -54,10 +54,6 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   if (err instanceof GithubError) {
     if (err.status === 401) {
       res.status(401).json({ error: 'GitHub session expired, sign in again' });
-    } else if (err.status === 403 || err.status === 404) {
-      res.status(403).json({
-        error: 'GitHub denied access to the bookmarks repo',
-      });
     } else {
       res.status(502).json({ error: `GitHub error: ${err.message}` });
     }

@@ -18,8 +18,6 @@ export type Session = {
   accessExpiresAt?: number;
   refreshToken?: string;
   refreshExpiresAt?: number;
-  canEdit: boolean;
-  canEditCheckedAt: number;
   createdAt: number;
 };
 

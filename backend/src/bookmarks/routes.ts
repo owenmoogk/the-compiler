@@ -14,10 +14,8 @@ import { Router } from 'express';
 import { nanoid } from 'nanoid';
 
 import type { SessionTools } from '../auth/middleware';
-import { mustSession } from '../auth/middleware';
 import { HttpError } from '../http';
 import type { BookmarkStore, Mutate } from './store';
-import type { Sync } from './sync';
 
 type Scrape = (url: string) => Promise<BookmarkMeta>;
 
@@ -45,21 +43,20 @@ export function bookmarksRouter(deps: {
   mutate: Mutate;
   scrape: Scrape;
   tools: SessionTools;
-  sync: Sync;
 }): Router {
-  const { store, mutate, scrape, tools, sync } = deps;
+  const { store, mutate, scrape, tools } = deps;
   const router = Router();
 
   /**
    * Fetches a link's title/favicon after the request has returned, then saves
-   * them as a second commit. Skipped if the link was deleted or its URL edited
+   * them as a second save. Skipped if the link was deleted or its URL edited
    * in the meantime.
    */
-  const fetchInfoLater = (token: string, id: string, url: string) => {
+  const fetchInfoLater = (id: string, url: string) => {
     void (async () => {
       try {
         const meta = await scrape(url);
-        await mutate(token, (current) => {
+        await mutate((current) => {
           const index = findIndex(current.bookmarks, id);
           const bookmark = current.bookmarks[index];
           if (bookmark.url !== url) {
@@ -93,12 +90,11 @@ export function bookmarksRouter(deps: {
   });
 
   router.post('/bookmarks', tools.editor, async (req, res) => {
-    const session = mustSession(res);
     const input = bookmarkCreateSchema.parse(req.body);
 
     // Saved right away; if the dialog's preview hadn't finished, the title and
     // favicon are fetched in the background.
-    const { file, result } = await mutate(session.accessToken, (current) => {
+    const { file, result } = await mutate((current) => {
       assertNoDuplicate(current.bookmarks, input.url);
       const bookmark: Bookmark = {
         id: nanoid(10),
@@ -118,17 +114,16 @@ export function bookmarksRouter(deps: {
       };
     });
     if (!result.meta) {
-      fetchInfoLater(session.accessToken, result.id, result.url);
+      fetchInfoLater(result.id, result.url);
     }
     res.status(201).json({ file, bookmark: result });
   });
 
   router.patch('/bookmarks/:id', tools.editor, async (req, res) => {
-    const session = mustSession(res);
     const id = req.params.id as string;
     const patch = bookmarkPatchSchema.parse(req.body);
 
-    const { file, result } = await mutate(session.accessToken, (current) => {
+    const { file, result } = await mutate((current) => {
       const index = findIndex(current.bookmarks, id);
       const old = current.bookmarks[index];
       if (patch.url) assertNoDuplicate(current.bookmarks, patch.url, id);
@@ -152,15 +147,14 @@ export function bookmarksRouter(deps: {
       };
     });
     if (result.urlChanged) {
-      fetchInfoLater(session.accessToken, id, result.bookmark.url);
+      fetchInfoLater(id, result.bookmark.url);
     }
     res.json({ file, bookmark: result.bookmark });
   });
 
   router.delete('/bookmarks/:id', tools.editor, async (req, res) => {
-    const session = mustSession(res);
     const id = req.params.id as string;
-    const { file } = await mutate(session.accessToken, (current) => {
+    const { file } = await mutate((current) => {
       const index = findIndex(current.bookmarks, id);
       const [removed] = current.bookmarks.splice(index, 1);
       return {
@@ -174,10 +168,9 @@ export function bookmarksRouter(deps: {
 
   /** Deletes several links in one change (missing ids are ignored). */
   router.post('/bookmarks/delete', tools.editor, async (req, res) => {
-    const session = mustSession(res);
     const { ids } = deleteManySchema.parse(req.body);
     const remove = new Set(ids);
-    const { file, result } = await mutate(session.accessToken, (current) => {
+    const { file, result } = await mutate((current) => {
       const removed = current.bookmarks.filter((b) => remove.has(b.id));
       if (!removed.length) throw new HttpError(404, 'Bookmarks not found');
       current.bookmarks = current.bookmarks.filter((b) => !remove.has(b.id));
@@ -190,21 +183,11 @@ export function bookmarksRouter(deps: {
     res.json({ file, deleted: result });
   });
 
-  /** Unpushed changes, and pushing them to GitHub now instead of waiting. */
-  router.get('/sync', tools.editor, (_req, res) => {
-    res.json(sync.status());
-  });
-  router.post('/sync', tools.editor, async (_req, res) => {
-    const result = await sync.syncNow();
-    res.json({ ...result, ...sync.status() });
-  });
-
   /** Renames a tag everywhere; renaming onto an existing tag merges them. */
   router.put('/tags/:tag', tools.editor, async (req, res) => {
-    const session = mustSession(res);
     const from = storedTagSchema.parse(req.params.tag);
     const { to } = renameTagSchema.parse(req.body);
-    const { file } = await mutate(session.accessToken, (current) => {
+    const { file } = await mutate((current) => {
       if (!current.bookmarks.some((b) => b.tags.includes(from))) {
         throw new HttpError(404, `No bookmarks are tagged "${from}"`);
       }

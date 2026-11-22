@@ -9,7 +9,7 @@ import {
 } from '@compiler/shared';
 import {
   Affix,
-  Alert,
+  Anchor,
   Button,
   Group,
   Paper,
@@ -30,6 +30,7 @@ import {
 
 import { deleteBookmark, deleteBookmarks } from '@api/bookmarks';
 import { errorMessage } from '@api/client';
+import { CONTACT_URL } from '@global/config';
 import { useSession } from '@global/session';
 import { useBookmarks } from '@global/useBookmarks';
 import { useView } from '@global/useView';
@@ -229,14 +230,16 @@ export default function BookmarksPage() {
       />
 
       {error && !file ? (
-        <Alert color="red" title="Could not load bookmarks">
-          <Stack gap="xs" align="start">
-            <Text size="sm">{error}</Text>
-            <Button size="xs" variant="default" onClick={() => void reload()}>
-              Try again
-            </Button>
-          </Stack>
-        </Alert>
+        <Stack gap={4} align="center" py="xl">
+          <Text fw={500}>Unable to retrieve content.</Text>
+          <Text size="sm" c="dimmed">
+            If you expect something to be here,{' '}
+            <Anchor href={CONTACT_URL} size="sm">
+              let me know
+            </Anchor>
+            .
+          </Text>
+        </Stack>
       ) : !file ? (
         <Stack gap="xs">
           {Array.from({ length: 6 }, (_, i) => (

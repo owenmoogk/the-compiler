@@ -2,9 +2,8 @@
 
 Useful links and resources, live at **https://owenmoogk.com/the-compiler/**.
 
-Anyone can browse, search and filter by tag. Signing in with GitHub (with push access to
-[owenmoogk/bookmarks](https://github.com/owenmoogk/bookmarks)) turns on editing: add links,
-edit, delete and rename tags. Each link's title and favicon are fetched when it's added.
+Anyone can browse, search and filter by tag. Signing in with GitHub as `owenmoogk` turns on
+editing: add links, edit, delete and rename tags. Each link's title and favicon are fetched when it's added.
 
 MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the original version.
 
@@ -12,24 +11,19 @@ MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the or
 
 ```
 browser ──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
-   │          ├ bookmarks.json on the server: the source of truth, saves are instant
-   │          ├ GitHub App sign-in, sessions (tokens never reach the browser)
-   │          ├ daily push of bookmarks.json to owenmoogk/bookmarks, as you
-   │          └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
-   │
-   └─ if the server is down ─▶ raw.githubusercontent.com/owenmoogk/bookmarks/main/bookmarks.json
+              ├ bookmarks.json on the server: the only copy, saves are instant
+              ├ GitHub App sign-in, sessions (tokens never reach the browser)
+              └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
+
+server's data/ ──▶ NAS, nightly tar.gz (homelab repo's backup script, 30 days kept)
 ```
 
-- **Data** lives on the server (`~/the-compiler/data/bookmarks.json`) and is pushed
-  to the public repo `owenmoogk/bookmarks` once a day at `SYNC_HOUR` (default 3am), as one
-  commit listing that day's changes. On first start the server copies the file from GitHub.
-  The server's copy wins: edits made directly on GitHub are overwritten by the next push.
-- **Pushing** uses the token of the most recent signed-in editor, refreshed automatically.
-  If nobody with edit access has signed in for ~6 months, the push is skipped (and retried
-  hourly) until someone signs in. Editors can also push immediately with `POST /api/sync`.
-- **Auth** is a GitHub App installed only on that repo. Only users with push access to the
-  repo can edit; the server checks this on every change. The server holds no PAT.
-- If the server is down, the site still works read-only from GitHub's copy (up to a day old).
+- **Data** lives only on the server, in `~/the-compiler/data/bookmarks.json`. The whole
+  `data/` folder is backed up to the NAS every night (see the homelab repo). If the server
+  is down, the site shows "Unable to retrieve content".
+- **Auth** is a GitHub App used for sign-in only. Only the GitHub account with id
+  `EDITOR_GITHUB_ID` (owenmoogk, set in `backend/deploy/compose.yaml`) can edit; the server
+  checks this on every change.
 
 ## Layout
 
@@ -49,10 +43,13 @@ cp backend/.env.example backend/.env    # then fill in SESSION_KEY (command is i
 yarn dev                                 # backend :8788 + frontend http://localhost:3000/the-compiler/
 ```
 
-The example `.env` runs without a GitHub App: on first start, `backend/.data/bookmarks.json`
-is copied from the public bookmarks repo, edits are saved to it and never pushed back,
-and "Sign in" logs you in as a fake editor (`DEV_LOGIN`). Delete that file to start over
-from the current GitHub copy.
+The example `.env` runs without a GitHub App: "Sign in" logs you in as a fake editor
+(`DEV_LOGIN`) and edits are saved to `backend/.data/bookmarks.json`, which starts empty.
+To work on a copy of the live list:
+
+```sh
+curl -o backend/.data/bookmarks.json https://compiler.owenmoogk.com/api/bookmarks
+```
 
 ```sh
 yarn lint        # eslint + prettier, all workspaces
@@ -81,21 +78,17 @@ This bumps the root version and pushes a `vX.Y.Z` tag. CI then:
 
 ## One-time setup
 
-### 1. Bookmarks repo
-Create the public repo `owenmoogk/bookmarks` and push `bookmarks.json` (generated with
-`yarn migrate ... --git-dir . --scrape`).
-
-### 2. GitHub App
+### 1. GitHub App
 GitHub → Settings → Developer settings → GitHub Apps → New:
 - **Callback URL:** `https://compiler.owenmoogk.com/auth/callback`
 - **Expire user authorization tokens:** on
 - **Webhook:** off
-- **Repository permissions:** Contents: *Read and write* (Metadata: read is automatic). Nothing else.
+- **Permissions:** none. It is only used to sign in.
 - **Where can it be installed:** only this account
 
-Then generate a client secret, and **install the app on `owenmoogk/bookmarks` only**.
+Then generate a client secret. The app doesn't need to be installed on any repo.
 
-### 3. Server (same box and pattern as learn-mcp)
+### 2. Server (same box and pattern as learn-mcp)
 The backend runs in Docker from `~/the-compiler`:
 ```
 ~/the-compiler/
@@ -103,10 +96,12 @@ The backend runs in Docker from `~/the-compiler`:
   .env           TAG=vX.Y.Z, APP_UID=, APP_GID= (the user that owns data/)
   secrets.env    installed by each deploy from GitHub secrets (chmod 600)
   deploy.sh      copy of backend/deploy/deploy.sh (the deploy key's forced command)
-  data/          state the server writes: bookmarks.json, sync-state.json, sessions.enc
+  data/          state the server writes: bookmarks.json (the only copy), sessions.enc
 ```
-Settings that aren't secret (URLs, bookmarks repo, GitHub App client ID) are in
+Settings that aren't secret (URLs, editor id, GitHub App client ID) are in
 `backend/deploy/compose.yaml`. `data/` is backed up nightly to the NAS (see the homelab repo).
+To restore, stop the container, untar the newest backup's `the-compiler/` folder from the NAS
+over `data/`, and start it again.
 ```sh
 mkdir -p ~/the-compiler/data && cd ~/the-compiler
 cp <repo>/backend/deploy/deploy.sh . && chmod +x deploy.sh
@@ -121,11 +116,11 @@ so it can't share learn-mcp's key:
 command="/home/USER/the-compiler/deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty ssh-ed25519 AAAA... the-compiler-deploy
 ```
 
-### 4. Cloudflare
+### 3. Cloudflare
 In the existing tunnel, add a public hostname `compiler.owenmoogk.com` → `http://localhost:8788`.
 SSH for deploys reuses the existing SSH hostname and Access service token.
 
-### 5. This repo's settings
+### 4. This repo's settings
 - **Pages:** Source = *GitHub Actions*. After the first deploy, delete the old `gh-pages` branch.
 - **Secrets:** `DEPLOY_SSH_KEY` (the new key's private half), `DEPLOY_KNOWN_HOSTS`,
   `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and the backend's own `SESSION_KEY` and
@@ -133,4 +128,3 @@ SSH for deploys reuses the existing SSH hostname and Access service token.
   GitHub never shows a secret again, so keep your own copy (e.g. a password manager).
 - **Variables:** `DEPLOY_HOST`, `DEPLOY_USER`
 
-Then run `yarn ver:major` to release v2.0.0.
