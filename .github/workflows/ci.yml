@@ -181,8 +181,8 @@ jobs:
 
       # SSH reaches the server through the Cloudflare Tunnel, behind a Cloudflare
       # Access service token. The deploy key can only run ~/the-compiler/deploy.sh
-      # (backend/deploy/deploy.sh), which installs backend/deploy/compose.yaml from
-      # stdin, pulls the image for this tag and restarts the container.
+      # (backend/deploy/deploy.sh), which installs compose.yaml and secrets.env from
+      # the bundle on stdin, pulls the image for this tag and restarts the container.
       - name: Deploy
         env:
           DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
@@ -191,11 +191,24 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          # The backend's secrets, written to ~/the-compiler/secrets.env by each deploy.
+          SESSION_KEY: ${{ secrets.SESSION_KEY }}
+          GITHUB_APP_CLIENT_SECRET: ${{ secrets.APP_CLIENT_SECRET }}
         run: |
+          umask 077
+          mkdir bundle
+          cp backend/deploy/compose.yaml bundle/
+          for key in SESSION_KEY GITHUB_APP_CLIENT_SECRET; do
+            value=$(printenv "$key" || true)
+            [ -n "$value" ] || { echo "::error::Secret for $key is not set" >&2; exit 1; }
+            printf '%s=%s\n' "$key" "$value"
+          done > bundle/secrets.env
+          tar -czf bundle.tgz -C bundle compose.yaml secrets.env
+
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             -o ProxyCommand='cloudflared access ssh --hostname %h' \
-            "$DEPLOY_USER@$DEPLOY_HOST" "$GITHUB_REF_NAME" < backend/deploy/compose.yaml
+            "$DEPLOY_USER@$DEPLOY_HOST" "$GITHUB_REF_NAME" < bundle.tgz

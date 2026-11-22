@@ -73,10 +73,11 @@ This bumps the root version and pushes a `vX.Y.Z` tag. CI then:
 3. deploys `frontend/dist` to GitHub Pages;
 4. builds the backend Docker image (`Dockerfile`) and pushes it to
    `ghcr.io/owenmoogk/the-compiler:vX.Y.Z` (and `:latest`);
-5. SSHes to the server through the Cloudflare Tunnel and pipes `backend/deploy/compose.yaml`
-   into `~/the-compiler/deploy.sh` (`backend/deploy/deploy.sh`). That script installs it,
-   sets the image tag, pulls the image, restarts the container, checks `/healthz`,
-   and rolls back to the previous tag if the check fails.
+5. SSHes to the server through the Cloudflare Tunnel and pipes a bundle of
+   `backend/deploy/compose.yaml` and a `secrets.env` built from this repo's secrets into
+   `~/the-compiler/deploy.sh` (`backend/deploy/deploy.sh`). That script installs both, sets
+   the image tag, pulls the image, restarts the container, checks `/healthz`, and rolls back
+   to the previous compose file, secrets and tag if the check fails.
 
 ## One-time setup
 
@@ -100,13 +101,14 @@ The backend runs in Docker from `~/the-compiler`:
 ~/the-compiler/
   compose.yaml   installed by each deploy (from backend/deploy/compose.yaml)
   .env           TAG=vX.Y.Z, APP_UID=, APP_GID= (the user that owns data/)
-  secrets.env    from backend/deploy/env.example, filled in, chmod 600
+  secrets.env    installed by each deploy from GitHub secrets (chmod 600)
   deploy.sh      copy of backend/deploy/deploy.sh (the deploy key's forced command)
-  data/          bookmarks.json, sync-state.json, sessions.enc
+  data/          state the server writes: bookmarks.json, sync-state.json, sessions.enc
 ```
+Settings that aren't secret (URLs, bookmarks repo, GitHub App client ID) are in
+`backend/deploy/compose.yaml`. `data/` is backed up nightly to the NAS (see the homelab repo).
 ```sh
 mkdir -p ~/the-compiler/data && cd ~/the-compiler
-cp <repo>/backend/deploy/env.example secrets.env && chmod 600 secrets.env   # fill in
 cp <repo>/backend/deploy/deploy.sh . && chmod +x deploy.sh
 printf 'TAG=\nAPP_UID=%s\nAPP_GID=%s\n' "$(id -u)" "$(id -g)" > .env
 ```
@@ -126,7 +128,9 @@ SSH for deploys reuses the existing SSH hostname and Access service token.
 ### 5. This repo's settings
 - **Pages:** Source = *GitHub Actions*. After the first deploy, delete the old `gh-pages` branch.
 - **Secrets:** `DEPLOY_SSH_KEY` (the new key's private half), `DEPLOY_KNOWN_HOSTS`,
-  `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`
+  `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and the backend's own `SESSION_KEY` and
+  `APP_CLIENT_SECRET` (GitHub App client secret; secret names can't start with `GITHUB_`).
+  GitHub never shows a secret again, so keep your own copy (e.g. a password manager).
 - **Variables:** `DEPLOY_HOST`, `DEPLOY_USER`
 
 Then run `yarn ver:major` to release v2.0.0.

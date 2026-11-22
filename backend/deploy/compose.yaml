@@ -1,5 +1,5 @@
-# Runs on the server from ~/the-compiler. CI sends this file with each deploy
-# (see backend/deploy/deploy.sh); TAG, APP_UID and APP_GID come from ~/the-compiler/.env.
+# Runs on the server from ~/the-compiler. CI sends this file and secrets.env with each
+# deploy (see backend/deploy/deploy.sh); TAG, APP_UID and APP_GID come from ~/the-compiler/.env.
 name: the-compiler
 
 services:
@@ -11,11 +11,21 @@ services:
     network_mode: host
     # Run as the owner of ./data so files it writes stay editable on the host.
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
-    # Secrets (GitHub App, SESSION_KEY, ...): see env.example. chmod 600, never committed.
-    env_file: ./secrets.env
+    # SESSION_KEY and GITHUB_APP_CLIENT_SECRET, written by each deploy from the repo's
+    # GitHub secrets (see the deploy-backend job in ci.yml).
+    env_file:
+      - path: ./secrets.env
+        format: raw
     environment:
       PORT: "8788"
       HOST: 127.0.0.1
+      PUBLIC_URL: https://compiler.owenmoogk.com
+      FRONTEND_URL: https://owenmoogk.com/the-compiler/
+      GITHUB_APP_CLIENT_ID: Iv23liA6jgAzKqvyRi6o
+      BOOKMARKS_REPO: owenmoogk/bookmarks
+      BOOKMARKS_BRANCH: main
+      BOOKMARKS_PATH: bookmarks.json
+      # State the server writes: bookmarks.json, sync-state.json, sessions.enc.
       DATA_DIR: /data
     volumes:
       - ./data:/data
