@@ -1,7 +1,7 @@
 {
   "name": "the-compiler",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.1.0",
   "workspaces": [
     "shared",
     "backend",
