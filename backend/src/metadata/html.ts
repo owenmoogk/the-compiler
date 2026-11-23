@@ -11,13 +11,13 @@ export type ParsedPage = {
   icons: IconCandidate[];
 };
 
-function clean(value: string | undefined, max: number): string | undefined {
+function clean(value: string | undefined, max: number) {
   const text = value?.replace(/\s+/g, ' ').trim();
   if (!text) return undefined;
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-function absolute(href: string | undefined, base: string): string | undefined {
+function absolute(href: string | undefined, base: string) {
   if (!href) return undefined;
   try {
     const url = new URL(href.trim(), base);
@@ -30,11 +30,7 @@ function absolute(href: string | undefined, base: string): string | undefined {
 }
 
 /** Largest side from a `sizes` attribute; "any" (SVG) counts as large. */
-function iconSize(
-  sizes: string | undefined,
-  href: string,
-  rel: string
-): number {
+function iconSize(sizes: string | undefined, href: string, rel: string) {
   if (sizes?.toLowerCase() === 'any' || /\.svg(\?|$)/i.test(href)) return 512;
   const values = (sizes ?? '')
     .split(/\s+/)
@@ -44,7 +40,7 @@ function iconSize(
   return rel.includes('apple-touch-icon') ? 180 : 32;
 }
 
-export function parseHtml(html: string, baseUrl: string): ParsedPage {
+export function parseHtml(html: string, baseUrl: string) {
   const $ = load(html);
   const meta = (...keys: string[]) => {
     for (const key of keys) {
@@ -86,7 +82,7 @@ export function parseHtml(html: string, baseUrl: string): ParsedPage {
 }
 
 /** Prefers a sharp icon without picking a huge one (it is shown at ~16-24px). */
-export function pickIcon(icons: readonly IconCandidate[]): string | undefined {
+export function pickIcon(icons: readonly IconCandidate[]) {
   const score = (icon: IconCandidate) =>
     icon.size <= 256 ? icon.size : 256 - icon.size / 1000;
   return [...icons].sort((a, b) => score(b) - score(a))[0]?.href;

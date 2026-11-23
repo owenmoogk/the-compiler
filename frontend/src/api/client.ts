@@ -1,35 +1,30 @@
+import type { AppType } from '@compiler/backend/app';
 import { API_URL } from '@global/config';
+import { DetailedError, hc } from 'hono/client';
 
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    message: string
-  ) {
-    super(message);
-  }
+/**
+ * Typed client for the backend, generated from its routes: paths, methods,
+ * inputs and responses are all checked against backend/src (see AppType).
+ * Wrap calls in parseResponse (hono/client) to get the body or a DetailedError.
+ */
+export const client = hc<AppType>(API_URL, {
+  init: { credentials: 'include' },
+});
+
+/** The HTTP status of a failed parseResponse call, if it got a response. */
+export function errorStatus(error: unknown) {
+  return error instanceof DetailedError
+    ? (error.statusCode as number | undefined)
+    : undefined;
 }
 
-export async function api<T>(
-  path: string,
-  { method = 'GET', body }: { method?: string; body?: unknown } = {}
-): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    credentials: 'include',
-    headers:
-      body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  if (res.status === 204) return undefined as T;
-  const data = (await res.json().catch(() => undefined)) as unknown;
-  if (!res.ok) {
-    const message = (data as { error?: string } | undefined)?.error;
-    throw new ApiError(res.status, message ?? res.statusText);
+/** The server's `{ error }` message when there is one, else the error's own. */
+export function errorMessage(error: unknown) {
+  if (error instanceof DetailedError) {
+    const detail = error.detail as { data?: { error?: unknown } } | undefined;
+    const serverMessage = detail?.data?.error;
+    if (typeof serverMessage === 'string') return serverMessage;
   }
-  return data as T;
-}
-
-export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
 }

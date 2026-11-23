@@ -25,11 +25,11 @@ export type BookmarkStore = {
   ): Promise<string>;
 };
 
-function serialize(file: BookmarksFile): string {
+function serialize(file: BookmarksFile) {
   return `${JSON.stringify(file, null, 2)}\n`;
 }
 
-function parseFile(text: string): BookmarksFile {
+function parseFile(text: string) {
   const result = bookmarksFileSchema.safeParse(JSON.parse(text));
   if (!result.success) {
     throw new HttpError(500, 'bookmarks.json on the server is not valid');
@@ -91,9 +91,7 @@ export function createMutator(store: BookmarkStore) {
   let queue: Promise<unknown> = Promise.resolve();
   let last: Snapshot | undefined;
 
-  return async function mutate<T>(
-    change: (file: BookmarksFile) => Change<T>
-  ): Promise<{ file: BookmarksFile; result: T }> {
+  return async function mutate<T>(change: (file: BookmarksFile) => Change<T>) {
     const run = async () => {
       for (let attempt = 0; ; attempt++) {
         const cached = last;
@@ -140,7 +138,7 @@ export function createMutator(store: BookmarkStore) {
 
 export type Mutate = ReturnType<typeof createMutator>;
 
-function truncate(text: string, max: number): string {
+function truncate(text: string, max: number) {
   const oneLine = text.replace(/\s+/g, ' ').trim();
   return oneLine.length > max ? `${oneLine.slice(0, max - 1)}…` : oneLine;
 }
@@ -150,9 +148,7 @@ function truncate(text: string, max: number): string {
  * "Web Development"). Run at startup; returns the change message if anything
  * changed.
  */
-export async function normalizeStoredTags(
-  store: BookmarkStore
-): Promise<string | undefined> {
+export async function normalizeStoredTags(store: BookmarkStore) {
   const { file, sha } = await store.read();
   let changed = 0;
   const bookmarks = file.bookmarks.map((bookmark) => {

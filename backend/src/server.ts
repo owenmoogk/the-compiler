@@ -1,3 +1,4 @@
+import { serve } from '@hono/node-server';
 import { join } from 'node:path';
 
 import { createApp } from './app';
@@ -28,12 +29,15 @@ const app = createApp({
   scrape: scrapeMetadata,
 });
 
-const server = app.listen(config.port, config.host, () => {
-  console.log(
-    `the-compiler backend ${APP_VERSION} on http://${config.host}:${String(config.port)} ` +
-      `(file ${config.bookmarksFile})`
-  );
-});
+const server = serve(
+  { fetch: app.fetch, port: config.port, hostname: config.host },
+  () => {
+    console.log(
+      `the-compiler backend ${APP_VERSION} on http://${config.host}:${String(config.port)} ` +
+        `(file ${config.bookmarksFile})`
+    );
+  }
+);
 
 const shutdown = () => {
   server.close();

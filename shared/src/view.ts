@@ -18,7 +18,7 @@ export type BookmarkView = {
 
 export type TagCount = { tag: string; count: number };
 
-function searchText(bookmark: Bookmark): string {
+function searchText(bookmark: Bookmark) {
   return [
     displayTitle(bookmark),
     displayDescription(bookmark),
@@ -37,7 +37,7 @@ export function filterBookmarks(
   bookmarks: readonly Bookmark[],
   view: Pick<BookmarkView, 'query' | 'tags'> &
     Partial<Pick<BookmarkView, 'section'>>
-): Bookmark[] {
+) {
   const words = view.query.toLowerCase().split(/\s+/).filter(Boolean);
 
   return bookmarks.filter((bookmark) => {
@@ -61,7 +61,7 @@ const compareText = (a: string, b: string) =>
 export function countTags(
   bookmarks: readonly Bookmark[],
   sort: TagSort = 'count'
-): TagCount[] {
+) {
   const counts = new Map<string, number>();
   for (const bookmark of bookmarks) {
     for (const tag of bookmark.tags) {
@@ -81,7 +81,7 @@ export function renameTagIn(
   bookmarks: readonly Bookmark[],
   from: string,
   to: string
-): Bookmark[] {
+) {
   return bookmarks.map((bookmark) => {
     if (!bookmark.tags.includes(from)) return bookmark;
     const tags = bookmark.tags.map((tag) => (tag === from ? to : tag));
@@ -98,7 +98,7 @@ export type TagGroup = { tag: string | null; bookmarks: Bookmark[] };
 export function groupByTag(
   bookmarks: readonly Bookmark[],
   only: readonly string[] = []
-): TagGroup[] {
+) {
   const groups = new Map<string, Bookmark[]>();
   const untagged: Bookmark[] = [];
   for (const bookmark of bookmarks) {

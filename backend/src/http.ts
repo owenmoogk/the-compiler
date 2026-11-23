@@ -1,9 +1,12 @@
-import type { ErrorRequestHandler, Request } from 'express';
+import type { Env, ErrorHandler, MiddlewareHandler } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { validator } from 'hono/validator';
 import { z } from 'zod';
 
 export class HttpError extends Error {
   constructor(
-    readonly status: number,
+    readonly status: ContentfulStatusCode,
     message: string
   ) {
     super(message);
@@ -20,60 +23,53 @@ export class GithubError extends Error {
   }
 }
 
-export function parseCookies(req: Request): Record<string, string> {
-  const header = req.headers.cookie;
-  const out: Record<string, string> = {};
-  if (!header) return out;
-  for (const part of header.split(';')) {
-    const index = part.indexOf('=');
-    if (index < 0) continue;
-    const name = part.slice(0, index).trim();
-    const value = part.slice(index + 1).trim();
-    try {
-      out[name] = decodeURIComponent(value);
-    } catch {
-      out[name] = value;
-    }
-  }
-  return out;
-}
-
-export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
-  if (res.headersSent) {
-    next(err);
-    return;
-  }
+/** Every error becomes `{ error: message }`, which the frontend's api() reads. */
+export const errorHandler: ErrorHandler = (err, c) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message });
-    return;
+    return c.json({ error: err.message }, err.status);
   }
   if (err instanceof z.ZodError) {
-    res.status(400).json({ error: z.prettifyError(err) });
-    return;
+    return c.json({ error: z.prettifyError(err) }, 400);
   }
   if (err instanceof GithubError) {
-    if (err.status === 401) {
-      res.status(401).json({ error: 'GitHub session expired, sign in again' });
-    } else {
-      res.status(502).json({ error: `GitHub error: ${err.message}` });
-    }
-    return;
+    return err.status === 401
+      ? c.json({ error: 'GitHub session expired, sign in again' }, 401)
+      : c.json({ error: `GitHub error: ${err.message}` }, 502);
   }
-  // body-parser errors carry a status
-  const status = (err as { status?: unknown }).status;
-  if (typeof status === 'number' && status >= 400 && status < 500) {
-    res.status(status).json({ error: (err as Error).message });
-    return;
+  // Hono's own errors: malformed JSON, csrf() rejecting another site, ...
+  if (err instanceof HTTPException && err.status < 500) {
+    return c.json({ error: err.message || 'Request rejected' }, err.status);
   }
   console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
+  return c.json({ error: 'Internal server error' }, 500);
 };
+
+/*
+ * Route validators: `json(schema)` before a handler parses the body with the
+ * schema (a ZodError becomes a 400 above) and types `c.req.valid('json')`.
+ * The typed client (hono/client) sends the schema's input type; handlers get
+ * its output type, after transforms.
+ */
+type Validated<
+  T extends 'json' | 'param',
+  S extends z.ZodType,
+> = MiddlewareHandler<
+  Env,
+  string,
+  { in: { [K in T]: z.input<S> }; out: { [K in T]: z.output<S> } }
+>;
+
+export const json = <S extends z.ZodType>(schema: S) =>
+  validator('json', (value) => schema.parse(value)) as Validated<'json', S>;
+
+export const param = <S extends z.ZodType>(schema: S) =>
+  validator('param', (value) => schema.parse(value)) as Validated<'param', S>;
 
 export async function mapLimit<T, R>(
   items: readonly T[],
   limit: number,
   fn: (item: T) => Promise<R>
-): Promise<R[]> {
+) {
   const results = new Array<R>(items.length);
   let next = 0;
   const worker = async () => {

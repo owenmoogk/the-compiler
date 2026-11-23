@@ -67,7 +67,7 @@ export const SECTION_INFO: Record<Section, { label: string; hint: string }> = {
 /** Where the page opens, and where a link saved before sections existed shows. */
 export const DEFAULT_SECTION: Section = 'curiosities';
 
-export function sectionOf(bookmark: { section?: Section }): Section {
+export function sectionOf(bookmark: { section?: Section }) {
   return bookmark.section ?? DEFAULT_SECTION;
 }
 
@@ -135,7 +135,7 @@ export function emptyBookmarksFile(): BookmarksFile {
   return { version: 1, bookmarks: [] };
 }
 
-export function hostnameOf(url: string): string {
+export function hostnameOf(url: string) {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
   } catch {
@@ -143,16 +143,16 @@ export function hostnameOf(url: string): string {
   }
 }
 
-export function displayTitle(bookmark: Bookmark): string {
+export function displayTitle(bookmark: Bookmark) {
   return bookmark.title ?? bookmark.meta?.title ?? hostnameOf(bookmark.url);
 }
 
-export function displayDescription(bookmark: Bookmark): string | undefined {
+export function displayDescription(bookmark: Bookmark) {
   return bookmark.notes ?? bookmark.meta?.description;
 }
 
 /** Compares URLs loosely so the same page is not saved twice. */
-export function sameUrl(a: string, b: string): boolean {
+export function sameUrl(a: string, b: string) {
   const normalize = (raw: string) => {
     try {
       const url = new URL(raw);

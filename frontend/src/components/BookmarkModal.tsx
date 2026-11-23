@@ -34,7 +34,7 @@ import { errorMessage } from '@api/client';
 import Favicon from './Favicon';
 import TagPicker from './TagPicker';
 
-function isHttpUrl(value: string): boolean {
+function isHttpUrl(value: string) {
   try {
     const url = new URL(value);
     return (
@@ -47,7 +47,7 @@ function isHttpUrl(value: string): boolean {
 }
 
 /** A custom title, or null when it's empty or just the fetched one. */
-function titleOverride(value: string, fetched?: string): string | null {
+function titleOverride(value: string, fetched?: string) {
   const title = value.trim();
   return title && title !== fetched ? title : null;
 }

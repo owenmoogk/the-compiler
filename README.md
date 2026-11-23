@@ -13,7 +13,7 @@ MASSIVE thanks to [janik](https://github.com/JanikThePanic), who inspired the or
 browser ──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
               ├ bookmarks.json on the server: the only copy, saves are instant
               ├ GitHub App sign-in, sessions (tokens never reach the browser)
-              └ metadata scraper (oEmbed + HTML; blocks LAN/loopback addresses)
+              └ metadata scraper (HTML; blocks LAN/loopback addresses)
 
 server's data/ ──▶ NAS, nightly tar.gz (homelab repo's backup script, 30 days kept)
 ```

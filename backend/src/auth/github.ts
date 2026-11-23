@@ -10,7 +10,7 @@ export async function githubApi(
   token: string | undefined,
   path: string,
   init: RequestInit = {}
-): Promise<Response> {
+) {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/vnd.github+json');
   headers.set('X-GitHub-Api-Version', '2022-11-28');
@@ -55,10 +55,7 @@ export type Tokens = {
   refreshExpiresAt?: number;
 };
 
-async function requestToken(
-  config: Config,
-  params: Record<string, string>
-): Promise<Tokens> {
+async function requestToken(config: Config, params: Record<string, string>) {
   const res = await fetch('https://github.com/login/oauth/access_token', {
     method: 'POST',
     headers: {
@@ -96,7 +93,7 @@ async function requestToken(
   };
 }
 
-export function authorizeUrl(config: Config, state: string): string {
+export function authorizeUrl(config: Config, state: string) {
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', config.github.clientId);
   url.searchParams.set('redirect_uri', `${config.publicUrl}/auth/callback`);
@@ -105,20 +102,14 @@ export function authorizeUrl(config: Config, state: string): string {
   return url.toString();
 }
 
-export async function exchangeCode(
-  config: Config,
-  code: string
-): Promise<Tokens> {
+export async function exchangeCode(config: Config, code: string) {
   return requestToken(config, {
     code,
     redirect_uri: `${config.publicUrl}/auth/callback`,
   });
 }
 
-export async function refreshTokens(
-  config: Config,
-  refreshToken: string
-): Promise<Tokens> {
+export async function refreshTokens(config: Config, refreshToken: string) {
   return requestToken(config, {
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
@@ -126,10 +117,7 @@ export async function refreshTokens(
 }
 
 /** Best effort: invalidates the user token on GitHub's side at logout. */
-export async function revokeToken(
-  config: Config,
-  accessToken: string
-): Promise<void> {
+export async function revokeToken(config: Config, accessToken: string) {
   const basic = Buffer.from(
     `${config.github.clientId}:${config.github.clientSecret}`
   ).toString('base64');

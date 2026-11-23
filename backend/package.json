@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "exports": {
+    "./app": {
+      "types": "./src/app.ts"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup",
@@ -11,17 +16,16 @@
   },
   "dependencies": {
     "@compiler/shared": "*",
+    "@hono/node-server": "^2.1.11",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.0",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.0.1",
+    "hono": "^4.13.20",
     "ipaddr.js": "^2.2.0",
     "nanoid": "^5.1.5",
     "undici": "^7.11.0",
     "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
     "tsup": "^8.5.0"
   }
 }

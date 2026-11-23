@@ -13,7 +13,7 @@ import { Agent, fetch as undiciFetch } from 'undici';
  */
 export class BlockedUrlError extends Error {}
 
-export function isPublicAddress(address: string): boolean {
+export function isPublicAddress(address: string) {
   if (!ipaddr.isValid(address)) return false;
   return ipaddr.process(address).range() === 'unicast';
 }
@@ -26,7 +26,7 @@ const BLOCKED_SUFFIXES = [
   '.home.arpa',
 ];
 
-export function assertPublicUrl(raw: string | URL): URL {
+export function assertPublicUrl(raw: string | URL) {
   const url = new URL(raw);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new BlockedUrlError('Only http(s) URLs can be fetched');
@@ -100,7 +100,7 @@ export async function safeFetch(
     accept = 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
     maxBytes = 2 * 1024 * 1024,
   }: { method?: 'GET' | 'HEAD'; accept?: string; maxBytes?: number } = {}
-): Promise<FetchedPage> {
+) {
   let current = assertPublicUrl(raw);
   const deadline = AbortSignal.timeout(12_000);
 

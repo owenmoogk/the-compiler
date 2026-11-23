@@ -65,7 +65,7 @@ export type Config = {
   devLogin: boolean;
 };
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   loadDotenv({ quiet: true });
   const parsed = envSchema.safeParse(env);
   if (!parsed.success) {

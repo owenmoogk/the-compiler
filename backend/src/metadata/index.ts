@@ -2,10 +2,9 @@ import type { BookmarkMeta } from '@compiler/shared';
 import { metaSchema } from '@compiler/shared';
 
 import { parseHtml, pickIcon } from './html';
-import { fetchOembed, findProvider } from './oembed';
 import { safeFetch } from './ssrf';
 
-function message(error: unknown): string {
+function message(error: unknown) {
   if (error instanceof Error) {
     const cause = (error as { cause?: unknown }).cause;
     return cause instanceof Error
@@ -15,7 +14,7 @@ function message(error: unknown): string {
   return String(error);
 }
 
-async function faviconIco(pageUrl: string): Promise<string | undefined> {
+async function faviconIco(pageUrl: string) {
   const ico = new URL('/favicon.ico', pageUrl).toString();
   try {
     const res = await safeFetch(ico, { method: 'HEAD', accept: 'image/*' });
@@ -31,7 +30,7 @@ async function faviconIco(pageUrl: string): Promise<string | undefined> {
  * Collects title, description, favicon, etc. for a URL. Never throws: when
  * nothing useful could be fetched, the reason is recorded in `error`.
  */
-export async function scrapeMetadata(url: string): Promise<BookmarkMeta> {
+export async function scrapeMetadata(url: string) {
   const draft: Partial<BookmarkMeta> = {};
   const errors: string[] = [];
   const fill = (values: Partial<BookmarkMeta>) => {
@@ -42,15 +41,6 @@ export async function scrapeMetadata(url: string): Promise<BookmarkMeta> {
       if (value && !draft[key]) draft[key] = value;
     }
   };
-
-  const provider = findProvider(url);
-  if (provider) {
-    try {
-      fill(await fetchOembed(provider, url));
-    } catch (error) {
-      errors.push(message(error));
-    }
-  }
 
   let finalUrl = url;
   try {
@@ -78,7 +68,7 @@ export async function scrapeMetadata(url: string): Promise<BookmarkMeta> {
   }
 
   if (!draft.favicon) {
-    draft.favicon = provider?.favicon ?? (await faviconIco(finalUrl));
+    draft.favicon = await faviconIco(finalUrl);
   }
 
   // Drop anything that does not fit the schema (e.g. a data: image URL).

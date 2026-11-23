@@ -14,7 +14,7 @@ export function useBookmarks() {
   const ready = session.status !== 'loading';
 
   /** Loads the list; resolves to it (or undefined on failure). */
-  const load = useCallback(async (): Promise<BookmarksFile | undefined> => {
+  const load = useCallback(async () => {
     try {
       const next = await fetchBookmarks();
       setFile(next);

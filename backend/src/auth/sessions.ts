@@ -24,7 +24,7 @@ export type Session = {
 /** Sessions without an expiring refresh token are dropped after this long. */
 const MAX_SESSION_AGE = 180 * 24 * 60 * 60 * 1000;
 
-function encrypt(key: Buffer, plaintext: string): string {
+function encrypt(key: Buffer, plaintext: string) {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   const body = Buffer.concat([
@@ -34,7 +34,7 @@ function encrypt(key: Buffer, plaintext: string): string {
   return Buffer.concat([iv, cipher.getAuthTag(), body]).toString('base64');
 }
 
-function decrypt(key: Buffer, encoded: string): string {
+function decrypt(key: Buffer, encoded: string) {
   const raw = Buffer.from(encoded, 'base64');
   const decipher = createDecipheriv('aes-256-gcm', key, raw.subarray(0, 12));
   decipher.setAuthTag(raw.subarray(12, 28));
@@ -44,7 +44,7 @@ function decrypt(key: Buffer, encoded: string): string {
   ]).toString('utf8');
 }
 
-export function sessionExpiresAt(session: Session): number {
+export function sessionExpiresAt(session: Session) {
   return session.refreshExpiresAt ?? session.createdAt + MAX_SESSION_AGE;
 }
 
@@ -61,7 +61,7 @@ export class SessionStore {
     private readonly key: Buffer
   ) {}
 
-  static async open(file: string | null, key: Buffer): Promise<SessionStore> {
+  static async open(file: string | null, key: Buffer) {
     const store = new SessionStore(file, key);
     if (file) {
       try {
@@ -81,7 +81,7 @@ export class SessionStore {
     return store;
   }
 
-  get(id: string | undefined): Session | undefined {
+  get(id: string | undefined) {
     if (!id) return undefined;
     const session = this.sessions.get(id);
     if (!session) return undefined;
@@ -97,14 +97,14 @@ export class SessionStore {
   }
 
   /** All live sessions, newest first. */
-  list(): Session[] {
+  list() {
     this.prune();
     return [...this.sessions.values()].sort(
       (a, b) => b.createdAt - a.createdAt
     );
   }
 
-  create(data: Omit<Session, 'id' | 'createdAt'>): Session {
+  create(data: Omit<Session, 'id' | 'createdAt'>) {
     const session: Session = {
       ...data,
       id: randomBytes(32).toString('base64url'),
@@ -115,7 +115,7 @@ export class SessionStore {
     return session;
   }
 
-  update(id: string, patch: Partial<Omit<Session, 'id'>>): Session | undefined {
+  update(id: string, patch: Partial<Omit<Session, 'id'>>) {
     const current = this.sessions.get(id);
     if (!current) return undefined;
     const next = { ...current, ...patch };
@@ -124,23 +124,23 @@ export class SessionStore {
     return next;
   }
 
-  delete(id: string): void {
+  delete(id: string) {
     if (this.sessions.delete(id)) this.save();
   }
 
   /** Resolves once everything written so far is on disk. */
-  async flush(): Promise<void> {
+  async flush() {
     await this.saving;
   }
 
-  private prune(): void {
+  private prune() {
     const now = Date.now();
     for (const [id, session] of this.sessions) {
       if (sessionExpiresAt(session) < now) this.sessions.delete(id);
     }
   }
 
-  private save(): void {
+  private save() {
     const file = this.file;
     if (!file) return;
     this.saving = this.saving.then(async () => {

@@ -16,7 +16,7 @@ export default defineConfig({
   sourcemap: true,
   noExternal: [/.*/],
   define: { __APP_VERSION__: JSON.stringify(version) },
-  // CommonJS deps (express) call require() for node builtins; give the ESM bundle one.
+  // CommonJS deps call require() for node builtins; give the ESM bundle one.
   banner: {
     js: "import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);",
   },
