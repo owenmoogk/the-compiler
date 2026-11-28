@@ -15,11 +15,11 @@ browser ──▶ compiler.owenmoogk.com (Cloudflare Tunnel → basement server)
               ├ GitHub App sign-in, sessions (tokens never reach the browser)
               └ metadata scraper (HTML; blocks LAN/loopback addresses)
 
-server's data/ ──▶ NAS, nightly tar.gz (homelab repo's backup script, 30 days kept)
+server's data/ ──▶ NAS, nightly tar.gz (backup service in compose.yaml, 30 days kept)
 ```
 
 - **Data** lives only on the server, in `~/the-compiler/data/bookmarks.json`. The whole
-  `data/` folder is backed up to the NAS every night (see the homelab repo). If the server
+  `data/` folder is backed up to the NAS every night (see One-time setup). If the server
   is down, the site shows "Unable to retrieve content".
 - **Auth** is a GitHub App used for sign-in only. Only the GitHub account with id
   `EDITOR_GITHUB_ID` (owenmoogk, set in `backend/deploy/compose.yaml`) can edit; the server
@@ -99,10 +99,12 @@ The backend runs in Docker from `~/the-compiler`:
   data/          state the server writes: bookmarks.json (the only copy), sessions.enc
 ```
 Settings that aren't secret (URLs, editor id, GitHub App client ID) are in
-`backend/deploy/compose.yaml`. `data/` is backed up nightly to the NAS (see the homelab repo).
-To restore, stop the container (`docker compose down`), untar the newest
-`/mnt/nas/minecraft/server-state/the-compiler/the-compiler_*.tar.gz` into `data/`
-(`tar -xzf <archive> -C ~/the-compiler/data`), and start it again (`docker compose up -d`).
+`backend/deploy/compose.yaml`. `data/` is backed up nightly to the NAS by the `backup` service in the same compose file
+(see its comments to change the time or destination). To restore, stop the app (`docker compose down`),
+untar the newest `/mnt/nas/minecraft/server-state/the-compiler/the-compiler_*.tar.gz` into the app's folder
+(`tar -xzf <archive> --strip-components=1 -C ~/the-compiler`; it holds `data/`), and start it again
+(`docker compose up -d`). Archives from before Nov 28, 2026 hold the contents of `data/` directly;
+untar those with `-C ~/the-compiler/data` and no `--strip-components`.
 ```sh
 mkdir -p ~/the-compiler/data && cd ~/the-compiler
 cp <repo>/backend/deploy/deploy.sh . && chmod +x deploy.sh

@@ -25,7 +25,7 @@ services:
       # GitHub user id of owenmoogk, the only account that can edit.
       EDITOR_GITHUB_ID: "58040528"
       # State the server writes: bookmarks.json (the only copy) and sessions.enc.
-      # Backed up nightly to the NAS by the homelab repo's backup script.
+      # Backed up nightly by the backup service below.
       DATA_DIR: /data
     volumes:
       - ./data:/data
@@ -43,6 +43,46 @@ services:
       interval: 30s
       timeout: 5s
       start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+
+  # Nightly backup of data/ to the NAS: one archive per night in
+  # /mnt/nas/minecraft/server-state/the-compiler/, kept 30 days. Restore by stopping the app and
+  # untarring an archive into this folder with --strip-components=1 (it holds data/).
+  # To back up somewhere else, change BACKUP_ARCHIVE or add one of the image's other
+  # storage backends: https://offen.github.io/docker-volume-backup/
+  backup:
+    image: offen/docker-volume-backup:v2.50.2
+    restart: unless-stopped
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    # The image skips a missing archive folder without failing, so create it first.
+    entrypoint: ["sh", "-c", "mkdir -p \"$$BACKUP_ARCHIVE\" && exec backup -foreground"]
+    environment:
+      BACKUP_CRON_EXPRESSION: "30 3 * * *"   # UTC
+      BACKUP_FILENAME: the-compiler_%Y-%m-%d_%H-%M-%S.tar.gz
+      BACKUP_ARCHIVE: /nas/server-state/the-compiler
+      BACKUP_RETENTION_DAYS: "30"
+      BACKUP_PRUNING_PREFIX: the-compiler_
+    volumes:
+      - ./data:/backup/data:ro
+      # The NAS share (a systemd automount on the host, see the homelab repo). rslave lets
+      # the container see it mount and unmount after it has started.
+      - type: bind
+        source: /mnt/nas/minecraft
+        target: /nas
+        bind:
+          propagation: rslave
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/lock
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    cpus: 0.5
+    mem_limit: 128m
     logging:
       driver: json-file
       options: { max-size: 10m, max-file: "3" }
